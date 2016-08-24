@@ -1,0 +1,22 @@
+{
+  "name": "openapi_optimise",
+  "version": "1.0.0",
+  "description": "Utility to optimise OpenApi (swagger 2.0) specifications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "openapi",
+    "swagger",
+    "optimise",
+    "optimize",
+    "optimisation",
+    "optimization"
+  ],
+  "author": "Mike Ralphson",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.15.0"
+  }
+}
