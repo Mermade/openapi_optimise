@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/Mermade/openapi_optimise/issues"
   },
-  "homepage": "https://github.com/Mermade/openapi_optimise#readme"
+  "homepage": "https://github.com/Mermade/openapi_optimise#readme",
   "dependencies": {
     "lodash": "^4.15.0"
   },
