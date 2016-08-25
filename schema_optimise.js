@@ -73,10 +73,13 @@ function analyse(definition,models,base,key) {
 			model.name = key;
 			model.path = path+'/'+key;
 			var json = JSON.stringify(obj[key]);
-			model.hash = sha1(json);
-			model.length = json.length;
 			model.parent = obj; // a direct ref is smaller than storing the path via JSON pointer etc
-			models.push(model);
+			if ((json.length >= MIN_LENGTH) && (model.definition.type) && ((model.definition.type == 'object') ||
+				(model.definition.type == 'array'))) {
+				model.hash = sha1(json);
+				model.length = json.length;
+				models.push(model);
+			}
 		}
 	});
 }
@@ -163,18 +166,33 @@ module.exports = {
 			state.definitions.push(d);
 		}
 
-		console.log('Matching models');
-		for (var m in state.models) {
+		console.log('Sorting models');
+		state.models = state.models.sort(function(a,b){
+			if (a.length<b.length) return +1;
+			if (a.length>b.length) return -1;
+			return 0;
+		});
+
+		var percent = -1;
+		console.log('Matching models ('+state.models.length+')');
+		for (var m=0;m<state.models.length;m++) {
 			var model = state.models[m];
 
-			for (var c in state.models) {
+			var newPercent = Math.floor((m/state.models.length)*100.0);
+			if (newPercent != percent) {
+				process.stdout.write('\r'+newPercent+'%');
+				percent = newPercent;
+			}
+
+			for (var c=m+1;((c<state.models.length) && (state.models[c].length==model.length));c++) {
 				var compare = state.models[c];
 
 				if (model.path != compare.path) {
-					if (_.isEqual(model.definition,compare.definition)) {
+					if ((model.hash == compare.hash) || (_.isEqual(model.definition,compare.definition))) {
 						found = false;
-						for (var h in state.matches) {
+						for (var h=state.matches.length-1;h>=0;h--) {
 							var match = state.matches[h];
+							if (match.length!=model.length) break;
 							if (_.isEqual(match.definition,model.definition)) {
 								found = true;
 								var location = {};
@@ -219,23 +237,21 @@ module.exports = {
 
 		for (var h in state.matches) {
 			var match = state.matches[h];
-			if ((match.length >= MIN_LENGTH) && (match.definition.type) && (match.definition.type == 'object')) {
-				var newName = getBestName(state,match);
-				console.log('Got a match '+match.hash+' '+match.length+' would name it '+newName);
-				console.log(JSON.stringify(match.definition));
-				for (var l in match.locations) {
-					var location = match.locations[l];
-					console.log('  @ '+location.path);
+			var newName = getBestName(state,match);
+			console.log('Got a match '+match.hash+' '+match.length+' would name it '+newName);
+			console.log(JSON.stringify(match.definition));
+			for (var l in match.locations) {
+				var location = match.locations[l];
+				console.log('  @ '+location.path);
 
-					if (!dest.definitions) {
-						dest.definitions = {};
-					}
-					dest.definitions[newName] = _.cloneDeep(match.definition);
-					var newDef = {};
-					newDef["$ref"] = '#/definitions/'+newName;
-					location.parent[location.name] = newDef;
-
+				if (!dest.definitions) {
+					dest.definitions = {};
 				}
+				dest.definitions[newName] = _.cloneDeep(match.definition);
+				var newDef = {};
+				newDef["$ref"] = '#/definitions/'+newName;
+				location.parent[location.name] = newDef;
+
 			}
 		}
 
