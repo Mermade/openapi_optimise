@@ -6,7 +6,7 @@ if (process.argv.length>2) {
 	var infile = process.argv[2];
 	var src = require(path.resolve(infile));
 
-	var dest = opt.optimise(src);
+	var dest = opt.optimise(src,{});
 
 	var outfile = (process.argv.length>3 ? process.argv[3] : '');
 
@@ -20,3 +20,4 @@ if (process.argv.length>2) {
 else {
 	console.log('Usage: openapi_optimise {infile} [{outfile}]');
 }
+

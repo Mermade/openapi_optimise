@@ -7,4 +7,5 @@ A utility to optimise OpenApi (swagger) 2.0 specifications, by
 * Removing unused common parameters
 * Removing redundant consumes/produces
 
-It may be most useful when the OpenApi specification has been converted from another format.
+It may be most useful when the OpenApi specification has been converted from another format or automatically
+generated.
