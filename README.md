@@ -7,5 +7,12 @@ A utility to optimise OpenApi (swagger) 2.0 specifications, by
 * Removing unused common parameters
 * Removing redundant consumes/produces
 
-It may be most useful when the OpenApi specification has been converted from another format or automatically
-generated.
+Not enabled by default are
+
+* Optional expansion of all $ref's prior to
+* Automatic creation of $ref's for repeated model elements
+
+As these currently consume excessive memory
+
+This optimisation may be most useful when the OpenApi specification has been converted from another format or
+automatically generated.
