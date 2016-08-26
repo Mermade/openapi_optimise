@@ -1,6 +1,11 @@
 # openapi_optimise
 
-A utility to optimise OpenApi (swagger) 2.0 specifications, by
+A utility to optimise OpenApi (swagger) 2.0 specifications
+
+These optimisations may be most useful when the OpenApi specification has been converted from another format or
+automatically generated. Savings of 25% *even after gzip compression* are easily possible.
+
+## Default optimisations
 
 * Converting repeated parameters into common parameters
 * Removing duplicated common parameters
@@ -9,17 +14,19 @@ A utility to optimise OpenApi (swagger) 2.0 specifications, by
 * Using tabs for indenting the output if serialised by the included utilities
 * Using UTF8 encoding for the output if serialised by the included utilities
 
-Not enabled by default are
+## Not enabled by default are
 
-* Optional expansion of all $ref's prior to
+* Compression of different representations of functionally equivalent empty schemas
+* Optional expansion of all *local* $ref's prior to
 * Automatic creation of $ref's for repeated model elements
 
-As these currently consume excessive memory
+As these currently consume excessive memory or have not been sufficiently tested
 
-These optimisations may be most useful when the OpenApi specification has been converted from another format or
-automatically generated. Savings of 25% *even after gzip compression* are easily possible.
+## TODO
 
-Included command-line tools:
+* Removal of object types where an enum only has one value and no format etc is specified
+
+## Included command-line tools:
 
 * `openapi_optimise` applies all default optimisations
 * `shrink` applies the currently non-default optimisations

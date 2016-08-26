@@ -1,6 +1,8 @@
 /* swagger deref
 * Used to pre-process specifications prior to shrinking (if required)
 * Also used by tests to validate shrunk specifications are functionally equivalent to originals
+*
+* See https://github.com/bojand/json-schema-deref-sync as a possible alternative
 */
 
 var _ = require('lodash');

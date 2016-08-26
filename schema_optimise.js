@@ -8,6 +8,7 @@ var _ = require('lodash');
 var deref = require('./schema_deref.js');
 var jptr = require('jgexml/jpath.js');
 
+// TODO move empty model compression to it's own module once tested thoroughly, so it can be made a default optimisation, but also used here
 var empty = [];
 empty.push({});
 var e2 = {};
@@ -33,6 +34,7 @@ function sha1(s) {
 	return shasum.digest('hex');
 }
 
+// TODO move recurse into it's own module once function signature settles. Fold parameters into a state object
 function recurse(obj,parent,path,options,callback) {
 
 	if (typeof obj != 'string') {
