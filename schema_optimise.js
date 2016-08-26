@@ -18,7 +18,7 @@ e3.type = 'object';
 e3.additionalProperties = 'true';
 empty.push(e3);
 
-var MIN_LENGTH = '{"$ref": "#/definitions/foo"}'.length;
+var MIN_LENGTH = '{"$ref": "#/definitions/m"}'.length;
 
 function isEmpty(obj) {
 	for (var e in empty) {
@@ -103,7 +103,7 @@ function extractModels(src) {
 				ptr += '/' + jptr.jpescape(a);
 				for (var r in src.paths[s][a].responses) {
 					var response = src.paths[s][a].responses[r];
-					if (response.schema) {
+					if ((response.schema) && (!response.schema["$ref"])) {
 						ptr += '/' + r;
 						analyse(response.schema,models,ptr,r);
 					}
@@ -127,6 +127,7 @@ function getBestName(state,match) {
 			}
 		}
 	}
+	if (!result) result = 'm'; // for model
 
 	var suffix = '';
 	while (state.definitions.indexOf(result+suffix)>=0) {
@@ -147,8 +148,8 @@ module.exports = {
 		// we could always expand all existing $ref's here, but it is unlikely we would do a better job of renaming them all
 		// when compressing again. This is available by setting options.expand = true
 
-		// Whether to extract the first occurrence of a model and $ref it, or to leave it in place and all the others
-		// to the original, should also be an option TODO
+		// TODO, it should be an option whether to extract the first occurrence of a model and $ref it (the default),
+		// or to leave it in place and all the others to the original, should also be an option TODO
 
 		if (options.expand) {
 			dest = deref.expand(src);
@@ -166,15 +167,17 @@ module.exports = {
 			state.definitions.push(d);
 		}
 
-		console.log('Sorting models');
+		console.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
 		state.models = state.models.sort(function(a,b){
 			if (a.length<b.length) return +1;
 			if (a.length>b.length) return -1;
+			if (a.hash>b.hash) return +1;
+			if (a.hash<b.hash) return -1;
 			return 0;
 		});
 
 		var percent = -1;
-		console.log('Matching models ('+state.models.length+')');
+		console.log('Matching models');
 		for (var m=0;m<state.models.length;m++) {
 			var model = state.models[m];
 
@@ -188,13 +191,13 @@ module.exports = {
 				var compare = state.models[c];
 
 				if (model.path != compare.path) {
-					if ((model.hash == compare.hash) || (_.isEqual(model.definition,compare.definition))) {
-						found = false;
+					if ((model.hash == compare.hash) && (_.isEqual(model.definition,compare.definition))) {
+						var matchLocn = -1;
 						for (var h=state.matches.length-1;h>=0;h--) {
 							var match = state.matches[h];
-							if (match.length!=model.length) break;
+							if ((match.length!=model.length) || (match.hash != model.hash)) break; // break out early if length or hash changes
 							if (_.isEqual(match.definition,model.definition)) {
-								found = true;
+								matchLocn = h;
 								var location = {};
 								location.path = compare.path;
 								location.parent = compare.parent;
@@ -204,11 +207,11 @@ module.exports = {
 							}
 						}
 
-						if (!found) {
+						if (matchLocn<0) {
 							var newMatch = {};
 							newMatch.definition = model.definition;
 							newMatch.length = Math.min(model.length,compare.length);
-							newMatch.hash = model.hash; // even though they may not hash to same value, useful for output
+							newMatch.hash = model.hash; // if it's good enough for git, it's good enough for me
 							newMatch.name = model.name;
 							newMatch.locations = [];
 
@@ -234,25 +237,33 @@ module.exports = {
 			}
 
 		}
+		console.log('\r100%');
+
+		// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
+		if (!dest.definitions) {
+			dest.definitions = {};
+		}
 
 		for (var h in state.matches) {
 			var match = state.matches[h];
 			var newName = getBestName(state,match);
-			console.log('Got a match '+match.hash+' '+match.length+' would name it '+newName);
-			console.log(JSON.stringify(match.definition));
+			console.log('Processing match '+match.hash+' '+match.length+' * '+match.locations.length+' => '+newName);
+			if (options.verbose>1) console.log(JSON.stringify(match.definition));
 			for (var l in match.locations) {
 				var location = match.locations[l];
-				console.log('  @ '+location.path);
+				if (options.verbose>1) console.log('  @ '+location.path);
 
-				if (!dest.definitions) {
-					dest.definitions = {};
-				}
 				dest.definitions[newName] = _.cloneDeep(match.definition);
 				var newDef = {};
 				newDef["$ref"] = '#/definitions/'+newName;
+				// this is where the matching model is actually replaced by it's $ref
 				location.parent[location.name] = newDef;
 
 			}
+		}
+
+		if (Object.keys(dest.definitions).length<=0) {
+			delete dest.definitions;
 		}
 
 		return dest;
