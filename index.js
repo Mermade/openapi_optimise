@@ -66,10 +66,18 @@ module.exports = {
 		state.cache = [];
 		state.rename = [];
 		state.common = [];
+		state.tags = [];
 
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
 			store(state,param,p,'#/parameters/'+p,'all',-1,true);
+		}
+
+		for (var t in src.tags) {
+			var tag = {};
+			tag.definition = src.tags[t];
+			tag.seen = 0;
+			state.tags.push(tag);
 		}
 
 		for (var p in src.paths) {
@@ -77,6 +85,17 @@ module.exports = {
 			for (var a in actions) {
 				var action = path[actions[a]];
 				if (action) {
+
+					for (var t in action.tags) {
+						var tag = action.tags[t];
+						for (var st in state.tags) {
+							var stag = state.tags[st];
+							if (stag.definition.name == tag) {
+								stag.seen++;
+							}
+						}
+					}
+
 					for (var pa in action.parameters) {
 						var param = action.parameters[pa];
 
@@ -180,6 +199,17 @@ module.exports = {
 							delete action.consumes;
 						}
 					}
+				}
+			}
+		}
+
+		if (dest.tags && state.tags.length>0) {
+			console.log('Removing unused tags');
+			for (var t in state.tags) {
+				var tag = state.tags[t];
+				if (tag.seen<=0) {
+					console.log('  Deleting '+tag.definition.name);
+					dest.tags.splice(t,1);
 				}
 			}
 		}

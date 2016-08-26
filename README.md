@@ -3,7 +3,7 @@
 A utility to optimise OpenApi (swagger) 2.0 specifications
 
 These optimisations may be most useful when the OpenApi specification has been converted from another format or
-automatically generated. Savings of 25% *even after gzip compression* are easily possible.
+automatically generated, and may improve code-generation. Size savings of 25% *even after gzip compression* are easily possible.
 
 ## Default optimisations
 
@@ -11,6 +11,7 @@ automatically generated. Savings of 25% *even after gzip compression* are easily
 * Removing duplicated common parameters
 * Removing unused common parameters
 * Removing redundant consumes/produces
+* Removing unused tags
 * Using tabs for indenting the output if serialised by the included utilities
 * Using UTF8 encoding for the output if serialised by the included utilities
 
