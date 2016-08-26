@@ -6,6 +6,8 @@ A utility to optimise OpenApi (swagger) 2.0 specifications, by
 * Removing duplicated common parameters
 * Removing unused common parameters
 * Removing redundant consumes/produces
+* Using tabs for indenting the output if serialised by the included utilities
+* Using UTF8 encoding for the output if serialised by the included utilities
 
 Not enabled by default are
 
@@ -14,5 +16,12 @@ Not enabled by default are
 
 As these currently consume excessive memory
 
-This optimisation may be most useful when the OpenApi specification has been converted from another format or
-automatically generated.
+These optimisations may be most useful when the OpenApi specification has been converted from another format or
+automatically generated. Savings of 25% *even after gzip compression* are easily possible.
+
+Included command-line tools:
+
+* `openapi_optimise` applies all default optimisations
+* `shrink` applies the currently non-default optimisations
+* `expand` applies the de-referencing algorithm. May create huge output on large specifications
+* `detab` simply serialises the input as a JSON object with no linefeeds or indentation
