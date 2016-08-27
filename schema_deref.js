@@ -26,14 +26,13 @@ function topoSort(src) {
 	var defs = [];
 
 	common.recurse(src,{},function(obj,state){
-		var key = state.keys[state.keys.length-1];
-		if (key == '$ref') {
+		if (state.key == '$ref') {
 
 			var entry = {};
 			var found = false;
 			for (var d in defs) {
 				var def = defs[d];
-				if (def.ref == obj[key]) {
+				if (def.ref == obj) {
 					found = true;
 					def.seen++;
 					entry = def;
@@ -41,13 +40,13 @@ function topoSort(src) {
 				if (found) break;
 			}
 			if (!found) {
-				entry.ref = obj[key];
+				entry.ref = obj;
 				entry.seen = 1;
 				entry.children = [];
 				defs.push(entry);
 			}
 
-			var ref = obj[key];
+			var ref = obj;
 			var restart = jptr.jptr(src,ref);
 
 			//console.log(ref+' '+JSON.stringify(restart));
@@ -56,15 +55,14 @@ function topoSort(src) {
 			var newState = {};
 
 			common.recurse(restart,newState,function(obj,state) {
-				var key = state.keys[state.keys.length-1];
-				if (key == '$ref') {
+				if (state.key == '$ref') {
 					var child = {};
-					child.ref = obj[key];
+					child.ref = obj;
 
 					var found = false;
 					for (var c in entry.children) {
 						var compare = entry.children[c];
-						if (compare.ref == obj[key]) {
+						if (compare.ref == obj) {
 							found = true;
 						}
 					}
@@ -127,60 +125,46 @@ function isCircular(circles,ref) {
 module.exports = {
 
 	expand : function(src,options) {
-		var dest = _.clone(src);
 
-		var circles = topoSort(dest);
+		var circles = topoSort(src);
 
-		var lib = {};
-		lib.parameters = dest.parameters;
-		lib.definitions = dest.definitions;
-		delete dest.parameters;
-		delete dest.definitions;
+		var lib = _.cloneDeep(src);
+		delete src.parameters;
+		src.definitions = {};
+
+		for (var c in circles) {
+			var circle = circles[c];
+			for (var cc in circle.children) {
+				var child = circle.children[cc];
+				var ref = child.ref.replace('#/definitions/','');
+				if ((lib.definitions[ref]) && (!src.definitions[ref])) {
+					console.log('Circular reference '+child.ref+ '-> '+circle.ref);
+					src.definitions[ref] = lib.definitions[ref];
+				}
+			}
+		}
 
 		var changes = 1;
 		var abort = false;
 		while ((changes>=1) && (!abort)) {
 			changes = 0;
-			common.recurse(dest,{},function(obj,state){
-				var key = state.keys[state.keys.length-1];
-				if (key == '$ref') {
-					var reference = obj[key];
+
+			common.recurse(src,{},function(obj,state){
+				if (state.key == '$ref') {
+					var reference = obj;
 
 					if (!isCircular(circles,reference)) {
 						var result = _.cloneDeep(jptr.jptr(lib,reference));
-						//console.log(reference+' @ '+path);
-						//console.log(JSON.stringify(result));
-
-						abort = false;
-						common.recurse(result,{},function(obj,state){
-							var key = state.keys[state.keys.length-1];
-							if (key == '$ref') {
-								var newRef = obj[key];
-								//console.log(newRef + ' =? '+reference);
-								//console.log(JSON.stringify(parent));
-								//console.log(JSON.stringify(obj));
-								if (newRef == reference) {
-									console.log('Monkeypatching self reference to '+reference);
-									//abort = true;
-									obj[key] = state.paths[state.paths.length-1];
-								}
-							}
-						});
-
-						if (result) {
-							// this is where the expansion actually happens
-							parent[oldkey] = result;
-							changes++;
-						}
-					}
-					else {
-						console.log('Avoided derefencing '+reference);
+						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+						changes++;
 					}
 				}
 			});
 		}
 
-		return dest;
+		common.clean(src,'definitions');
+
+		return src;
 	}
 
 };
