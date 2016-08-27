@@ -76,10 +76,10 @@ module.exports = {
 
 	recurse : recurse,
 
-	clean : function(obj,description) {
-		if (Object.keys(obj).length<=0) {
-			console.log('No '+description+' required');
-			delete obj;
+	clean : function(parent,name) {
+		if ((parent[name]) && (Object.keys(parent[name]).length<=0)) {
+			console.log('No '+name+' required');
+			delete parent[name];
 		}
 	},
 

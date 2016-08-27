@@ -35,7 +35,7 @@ module.exports = {
 					src.tags.splice(t,1);
 				}
 			}
-			common.clean(src.tags,'tags');
+			common.clean(src,'tags');
 		}
 		return src;
 	}

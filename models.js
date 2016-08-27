@@ -17,67 +17,39 @@ function sha1(s) {
 	return shasum.digest('hex');
 }
 
-// TODO move recurse into its own module once function signature settles. Fold parameters into a state object
-function recurse(obj,parent,path,options,callback) {
-
-	if (typeof obj != 'string') {
-		for (var key in obj) {
-			// skip loop if the property is from prototype
-			if (!obj.hasOwnProperty(key)) continue;
-
-			if (!options.depthFirst) callback(obj,parent,key,path);
-
-			//var array = Array.isArray(obj[key]);
-
-			if (typeof obj[key] === 'object') {
-				//if (array) {
-				//	for (var i in obj[key]) {
-				//		recurse(obj[key][i],obj[key],path+'/'+key+'['+i+']',options,callback);
-				//	}
-				//}
-				recurse(obj[key],obj,path+'/'+key,options,callback);
-			}
-
-			if (options.depthFirst) callback(obj,parent,key,path);
-		}
-	}
-
-	return obj;
-}
-
 function analyse(state,definition,models,base,key) {
-	recurse(definition,{},base+key,{},function(obj,parent,key,path){
-		//if (!obj["$ref"]) {
-			var model = {};
-			if (common.isEmpty(obj[key])) {
-				model.definition = {};
-			}
-			else {
-				model.definition = obj[key];
-			}
-			model.name = key;
-			model.path = path+'/'+key;
-			var json = JSON.stringify(obj[key]);
-			model.parent = obj; // a direct object reference is smaller than storing the another JSON pointer etc
-			if ((json.length >= MIN_LENGTH) && (model.definition.type) //) {
-				&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
-				model.hash = sha1(json);
-				model.length = json.length;
-				models.push(model);
-				console.log(model.hash + ' ' + model.length + ' ' + model.path);
-			}
-			if (obj["$ref"]) {
-				var ref = obj["$ref"];
-				if (ref.startsWith('#/definitions/')) {
-					ref = ref.replace('#/definitions/','');
-					var sd = _.find(state.definitions,function(o) { return o.name == ref;} );
-					if (sd) {
-						sd.seen++;
-					}
+	var state = {};
+	state.path = base+key;
+	common.recurse(definition,state,function(obj,state){
+		var model = {};
+		if (common.isEmpty(obj)) {
+			model.definition = {};
+		}
+		else {
+			model.definition = obj;
+		}
+		model.name = state.key;
+		model.path = state.path; //path+'/'+key;
+		var json = JSON.stringify(obj);
+		model.parent = state.parents[state.parents.length-1]; // a direct object reference is smaller than storing the another JSON pointer etc
+		if ((json.length >= MIN_LENGTH) && (model.definition.type) //) {
+			&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
+			model.hash = sha1(json);
+			model.length = json.length;
+			models.push(model);
+			console.log(model.hash + ' ' + model.length + ' ' + model.path);
+		}
+		if (key == "$ref") {
+			var ref = obj;
+			if (ref.startsWith('#/definitions/')) {
+				ref = ref.replace('#/definitions/','');
+				var sd = _.find(state.definitions,function(o) { return o.name == ref;} );
+				if (sd) {
+					sd.seen++;
 				}
 			}
+		}
 
-		//}
 	});
 }
 
@@ -299,15 +271,15 @@ module.exports = {
 			}
 		}
 
-		console.log('Removing unused definitions');
-		for (var d in state.definitions) {
-			var def = state.definitions[d];
-			if (def.seen<=0) {
-				console.log('  #/definition/'+def.name);
-				delete src.definitions[def.name];
-			}
-		}
-		common.clean(src.definitions,'definitions');
+		//console.log('Removing unused definitions');
+		//for (var d in state.definitions) {
+	 	//	var def = state.definitions[d];
+		//	if (def.seen<=0) {
+		//		console.log('  #/definition/'+def.name);
+		//		delete src.definitions[def.name];
+		//	}
+		//}
+		common.clean(src,'definitions');
 
 		return src;
 	}

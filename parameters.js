@@ -162,7 +162,7 @@ module.exports = {
 				}
 			}
 		}
-		common.clean(src.parameters,'parameters');
+		common.clean(src,'parameters');
 
 		return src;
 
