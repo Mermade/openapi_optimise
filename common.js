@@ -26,39 +26,46 @@ empty.push(e4);
 * options (input)
 * parents,keys,paths (output)
 *
-* Initially you can pass in an empty object
+* Initially you can pass in an empty object as the state
 */
 function recurse(obj,state,callback) {
+
+	var first = _.isEqual(state,{});
 
 	if (!state.parents) {
 		state.parents = [];
 		state.depth = 0;
 	}
-	if (!state.keys) state.keys = [];
-	if (!state.paths) state.paths = [];
+	if (!state.keys) {
+		state.keys = [];
+		state.keys.push(state.key = '');
+	}
+	if (!state.paths) {
+		state.paths = [];
+		state.paths.push(state.path ? state.path : state.path = '#');
+	}
 	if (!state.options) state.options = {}; // Object.assign with defaults
+
+	if (first) callback(obj,state);
 
 	if (typeof obj !== 'string') {
 		for (var key in obj) {
 			// skip loop if the property is from prototype
 			if (!obj.hasOwnProperty(key)) continue;
 
-			if (state.options.depthFirst) callback(obj,state);
+			state.parents.push(obj);
+			state.keys.push(key);
+			state.key = key;
+			state.path = state.paths[state.paths.length-1]+'/'+jptr.jpescape(key);
+			state.paths.push(state.path);
+			state.depth++;
+			callback(obj[key],state);
+			recurse(obj[key],state,callback);
+			state.parents.pop();
+			state.keys.pop();
+			state.paths.pop();
+			state.depth--;
 
-			if (typeof obj[key] === 'object') {
-				state.parents.push(obj);
-				state.keys.push(key);
-				state.paths.push(state.paths[state.paths.length-1]+'/'+jptr.jpescape(key));
-				state.depth++;
-				recurse(obj[key],state,callback);
-				state.parents.pop();
-				state.keys.pop();
-				state.paths.pop();
-				state.depth--;
-
-			}
-
-			if (!state.options.depthFirst) callback(obj,state);
 		}
 	}
 
