@@ -6,34 +6,8 @@
 */
 
 var _ = require('lodash');
+var common = require('./common.js');
 var jptr = require('jgexml/jpath.js');
-
-function recurse(obj,parent,oldkey,path,options,callback) {
-
-	if (typeof obj != 'string') {
-		for (var key in obj) {
-			// skip loop if the property is from prototype
-			if (!obj.hasOwnProperty(key)) continue;
-
-			if (!options.depthFirst) callback(obj,parent,key,oldkey,path);
-
-			//var array = Array.isArray(obj[key]);
-
-			if (typeof obj[key] === 'object') {
-				//if (array) {
-				//	for (var i in obj[key]) {
-				//		recurse(obj[key][i],obj[key],path+'/'+key+'['+i+']',options,callback);
-				//	}
-				//}
-				recurse(obj[key],obj,key,path+'/'+jptr.jpescape(key),options,callback);
-			}
-
-			if (options.depthFirst) callback(obj,parent,key,oldkey,path);
-		}
-	}
-
-	return obj;
-}
 
 function dump(defs,title) {
 	console.log(title);
@@ -51,7 +25,8 @@ function topoSort(src) {
 
 	var defs = [];
 
-	recurse(src,{},'','#',{},function(obj,parent,key,oldkey,path){
+	common.recurse(src,{},function(obj,state){
+		var key = state.keys[state.keys.length-1];
 		if (key == '$ref') {
 
 			var entry = {};
@@ -77,7 +52,11 @@ function topoSort(src) {
 
 			//console.log(ref+' '+JSON.stringify(restart));
 
-			recurse(restart,parent,oldkey,path,{},function(obj,parent,key,oldkey,path) {
+			var parent = state.parents[state.parents.length-1];
+			var newState = {};
+
+			common.recurse(restart,newState,function(obj,state) {
+				var key = state.keys[state.keys.length-1];
 				if (key == '$ref') {
 					var child = {};
 					child.ref = obj[key];
@@ -162,7 +141,8 @@ module.exports = {
 		var abort = false;
 		while ((changes>=1) && (!abort)) {
 			changes = 0;
-			recurse(dest,{},'','#',{},function(obj,parent,key,oldkey,path){
+			common.recurse(dest,{},function(obj,state){
+				var key = state.keys[state.keys.length-1];
 				if (key == '$ref') {
 					var reference = obj[key];
 
@@ -172,7 +152,8 @@ module.exports = {
 						//console.log(JSON.stringify(result));
 
 						abort = false;
-						recurse(result,{},'',path,{},function(obj,parent,key,oldkey,path){
+						common.recurse(result,{},function(obj,state){
+							var key = state.keys[state.keys.length-1];
 							if (key == '$ref') {
 								var newRef = obj[key];
 								//console.log(newRef + ' =? '+reference);
@@ -181,7 +162,7 @@ module.exports = {
 								if (newRef == reference) {
 									console.log('Monkeypatching self reference to '+reference);
 									//abort = true;
-									obj[key] = path;
+									obj[key] = state.paths[state.paths.length-1];
 								}
 							}
 						});
