@@ -28,6 +28,7 @@ As these currently consume excessive memory or have not been sufficiently tested
 ## TODO
 
 * Removal of object types where an enum only has one value and no format etc is specified?
+* Extract topological sort/circular reference detection to own module
 
 ## Included command-line tools (names subject to change)
 
