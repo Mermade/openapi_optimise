@@ -99,7 +99,7 @@ module.exports = {
 			var path = src.paths[p];
 			for (var a in actions) {
 				if (path[actions[a]]) {
-					callback(path[actions[a]]);
+					callback(path[actions[a]],actions[a]);
 				}
 			}
 		}

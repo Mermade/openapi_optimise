@@ -144,9 +144,26 @@ module.exports = {
 			}
 		}
 
+		// expand within definitions
 		var changes = 1;
-		var abort = false;
-		while ((changes>=1) && (!abort)) {
+		while (changes>=1) {
+			changes = 0;
+			common.recurse(lib.definitions,{},function(obj,state){
+				if (state.key == '$ref') {
+					var reference = obj;
+
+					if (!isCircular(circles,reference)) {
+						var result = jptr.jptr(lib,reference);
+						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+						changes++;
+					}
+				}
+			});
+		}
+
+		// expand use of definitions
+		var changes = 1;
+		while (changes>=1) {
 			changes = 0;
 
 			common.recurse(src,{},function(obj,state){

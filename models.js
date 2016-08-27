@@ -37,7 +37,7 @@ function analyse(state,definition,models,base,key) {
 			model.hash = sha1(json);
 			model.length = json.length;
 			models.push(model);
-			console.log(model.hash + ' ' + model.length + ' ' + model.path);
+			//console.log(model.hash + ' ' + model.length + ' ' + model.path);
 		}
 		if (key == "$ref") {
 			var ref = obj;
@@ -53,10 +53,10 @@ function analyse(state,definition,models,base,key) {
 	});
 }
 
-function extractModels(state,src) {
+function extractModels(state,src,depth) {
 	var models = [];
 
-	if (src.definitions) {
+	if ((depth==0) && (src.definitions)) {
 		for (var d in src.definitions) {
 			var definition = src.definitions[d];
 			if (!definition["$ref"]) {
@@ -65,27 +65,30 @@ function extractModels(state,src) {
 		}
 	}
 
+	common.forEachAction(src,function(action,name){
+		var aptr = sptr + '/' + name; // actions don't need escaping
+
+		for (var p in action.parameters) {
+			var param = action.parameters[p];
+			if ((param.schema)) {//&& (!param.schema["$ref"])) {
+				var pptr = aptr + '/' + p; // p is an array index, does not need escaping
+				analyse(state,param.schema,models,pptr,p);
+			}
+		}
+
+		for (var r in action.responses) {
+			var response = action.responses[r];
+			if (response.schema) {//&& (!response.schema["$ref"])) {
+				var rptr = aptr + '/'; // + r; // r is an HTTP response status code, does not need escaping
+				analyse(state,response.schema,models,rptr,r);
+			}
+		}
+
+	});
 	if (src.paths) {
 		for (var s in src.paths) {
 			var sptr = '#/'+jptr.jpescape(s);
 			for (var a in src.paths[s]) {
-				var aptr = sptr + '/' + jptr.jpescape(a);
-
-				for (var p in src.paths[s][a].parameters) {
-					var param = src.paths[s][a].parameters[p];
-					if ((param.schema)) {//&& (!param.schema["$ref"])) {
-						var pptr = aptr + '/' + p; // p is an array index, does not need escaping
-						analyse(state,param.schema,models,pptr,p);
-					}
-				}
-
-				for (var r in src.paths[s][a].responses) {
-					var response = src.paths[s][a].responses[r];
-					if (response.schema) {//&& (!response.schema["$ref"])) {
-						var rptr = aptr + '/' + r; // r is an HTTP response status code, does not need escaping
-						analyse(state,response.schema,models,rptr,r);
-					}
-				}
 
 			}
 		}
@@ -143,62 +146,60 @@ function getBestName(state,match) {
 function matchModels(state) {
 	var percent = -1;
 	console.log('Matching models');
-	for (var m=0;m<state.models.length;m++) {
-		var model = state.models[m];
 
-		var newPercent = Math.floor((m/state.models.length)*100.0);
-		if (newPercent != percent) {
-			process.stdout.write('\r'+newPercent+'%');
-			percent = newPercent;
-		}
+	var mIndex = 0;
+	while (mIndex<state.models.length-2) {
+		var model = state.models[mIndex];
+		var compare = state.models[mIndex+1];
 
-		for (var c=m+1;((c<state.models.length) && (state.models[c].length==model.length));c++) {
-			var compare = state.models[c];
+		// TODO check for off-by-one errors
+		while (compare && (model.length==compare.length) && (model.hash==compare.hash)) {
 
-			if (model.path != compare.path) {
-				if ((model.hash == compare.hash) && (_.isEqual(model.definition,compare.definition))) {
-					var matchLocn = -1;
-					for (var h=state.matches.length-1;h>=0;h--) {
-						var match = state.matches[h];
-						if ((match.model.length!=model.length) || (match.model.hash != model.hash)) break; // break out early if length or hash changes
-						if (_.isEqual(match.model.definition,model.definition)) {
-							matchLocn = h;
-							var location = {};
-							location.path = compare.path;
-							location.parent = compare.parent;
-							location.name = compare.name;
-							match.locations.push(location);
-							break;
-						}
-					}
+			//console.log('Match '+model.hash+' '+model.length+' '+model.path);
 
-					if (matchLocn<0) {
-						var newMatch = {};
-						newMatch.model = model;
-						newMatch.locations = [];
-
-						var orgLocn = {};
-						orgLocn.path = model.path;
-						orgLocn.parent = model.parent;
-						orgLocn.name = model.name;
-
-						var matchLocn = {};
-						matchLocn.path = compare.path;
-						matchLocn.parent = compare.parent;
-						matchLocn.name = compare.name;
-
-						newMatch.locations.push(orgLocn);
-						newMatch.locations.push(matchLocn);
-
-						state.matches.push(newMatch);
-					}
-
+			var matchLocn = -1;
+			for (var h=state.matches.length-1;h>=0;h--) {
+				var match = state.matches[h];
+				if ((match.model.length!=model.length) || (match.model.hash != model.hash)) break; // break out early if length or hash changes
+				if (_.isEqual(match.model.definition,model.definition)) {
+					matchLocn = h;
+					var location = {};
+					location.path = compare.path;
+					location.parent = compare.parent;
+					location.name = compare.name;
+					match.locations.push(location);
+					break;
 				}
 			}
 
+			if (matchLocn<0) {
+				var newMatch = {};
+				newMatch.model = model;
+				newMatch.locations = [];
+
+				var orgLocn = {};
+				orgLocn.path = model.path;
+				orgLocn.parent = model.parent;
+				orgLocn.name = model.name;
+
+				var matchLocn = {};
+				matchLocn.path = compare.path;
+				matchLocn.parent = compare.parent;
+				matchLocn.name = compare.name;
+
+				newMatch.locations.push(orgLocn);
+				newMatch.locations.push(matchLocn);
+
+				state.matches.push(newMatch);
+			}
+
+			mIndex++;
+			compare = state.models[mIndex+1];
 		}
+		mIndex++;
 
 	}
+
 	console.log('\r100%');
 }
 
@@ -218,68 +219,76 @@ module.exports = {
 			src = deref.expand(src);
 		}
 
-		state.matches = [];
-		state.definitions = [];
+		var changes = 1;
+		var depth = 0;
+		while (changes>0) {
+			changes = 0;
+			state.matches = [];
+			state.definitions = [];
 
-		for (var d in src.definitions) {
-			var entry = {};
-			entry.name = d;
-			entry.seen = 0;
-			state.definitions.push(entry);
-		}
-
-		console.log('Extracting models');
-		state.models = extractModels(state,src);
-
-		console.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
-		state.models = state.models.sort(function(a,b){
-			if (a.length<b.length) return +1; // reverse
-			if (a.length>b.length) return -1; // reverse
-			//if (a.length>b.length) return +1; // standard sort
-			//if (a.length<b.length) return -1; // standard sort
-			if (a.hash>b.hash) return +1;
-			if (a.hash<b.hash) return -1;
-			return 0;
-		});
-
-		matchModels(state);
-
-		// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
-		if (!src.definitions) {
-			src.definitions = {};
-		}
-
-		console.log('Processing matches');
-		for (var h in state.matches) {
-			var match = state.matches[h];
-			var newName = getBestName(state,match);
-
-			console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
-			if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
-
-			src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
-
-			for (var l=match.locations.length-1;l>=0;l--) {
-				var location = match.locations[l];
-				//if (options.verbose>1)
-				console.log('  @ '+location.path);
-
-				// this is where the matching model is actually replaced by its $ref
-				var newDef = {};
-				newDef["$ref"] = '#/definitions/'+newName;
-				location.parent[location.name] = newDef;
+			for (var d in src.definitions) {
+				var entry = {};
+				entry.name = d;
+				entry.seen = 0;
+				state.definitions.push(entry);
 			}
-		}
 
-		//console.log('Removing unused definitions');
-		//for (var d in state.definitions) {
-	 	//	var def = state.definitions[d];
-		//	if (def.seen<=0) {
-		//		console.log('  #/definition/'+def.name);
-		//		delete src.definitions[def.name];
-		//	}
-		//}
-		common.clean(src,'definitions');
+			console.log('Extracting models');
+			state.models = extractModels(state,src,depth);
+
+			console.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
+			state.models = state.models.sort(function(a,b){
+				if (a.length<b.length) return +1; // reverse
+				if (a.length>b.length) return -1; // reverse
+				//if (a.length>b.length) return +1; // standard sort
+				//if (a.length<b.length) return -1; // standard sort
+				if (a.hash>b.hash) return +1;
+				if (a.hash<b.hash) return -1;
+				return 0;
+			});
+
+			matchModels(state);
+
+			// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
+			if (!src.definitions) {
+				src.definitions = {};
+			}
+
+			console.log('Processing matches');
+			for (var h in state.matches) {
+				var match = state.matches[h];
+				var newName = getBestName(state,match);
+
+				//console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
+				if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
+
+				src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
+
+				for (var l=match.locations.length-1;l>=0;l--) {
+					var location = match.locations[l];
+					//if (options.verbose>1)
+					//console.log('  @ '+location.path);
+
+					// this is where the matching model is actually replaced by its $ref
+					var newDef = {};
+					newDef["$ref"] = '#/definitions/'+newName;
+					location.parent[location.name] = newDef;
+					changes++;
+				}
+			}
+			if (depth==0) {
+				console.log('Removing unused definitions');
+				for (var d in state.definitions) {
+					var def = state.definitions[d];
+					if (def.seen<=0) {
+						console.log('  #/definition/'+def.name);
+						delete src.definitions[def.name];
+					}
+				}
+				common.clean(src,'definitions');
+			}
+			depth++;
+		}
 
 		return src;
 	}
