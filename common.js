@@ -30,15 +30,14 @@ empty.push(e4);
 */
 function recurse(obj,state,callback) {
 
-	var first = _.isEqual(state,{});
-
 	if (!state.parents) {
 		state.parents = [];
 		state.depth = 0;
 	}
+	var first = (state.depth == 0); //_.isEqual(state.parents,[]);
 	if (!state.keys) {
 		state.keys = [];
-		state.keys.push(state.key = '');
+		state.keys.push(state.key ? state.key : state.key = '');
 	}
 	if (!state.paths) {
 		state.paths = [];
@@ -99,7 +98,8 @@ module.exports = {
 			var path = src.paths[p];
 			for (var a in actions) {
 				if (path[actions[a]]) {
-					callback(path[actions[a]],actions[a]);
+					var aptr = '#/'+jptr.jpescape(p)+'/'+actions[a];
+					callback(path[actions[a]],aptr,actions[a]);
 				}
 			}
 		}

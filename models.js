@@ -17,13 +17,17 @@ function sha1(s) {
 	return shasum.digest('hex');
 }
 
-function analyse(state,definition,models,base,key) {
+function analyse(gState,definition,models,base,key) {
 	var state = {};
-	state.path = base+key;
+	state.path = base+jptr.jpescape(key);
+	state.key = key;
+	state.parents = [];
+	state.parents.push(definition);
 	common.recurse(definition,state,function(obj,state){
 		var model = {};
 		if (common.isEmpty(obj)) {
 			model.definition = {};
+			console.log('empty');
 		}
 		else {
 			model.definition = obj;
@@ -37,13 +41,15 @@ function analyse(state,definition,models,base,key) {
 			model.hash = sha1(json);
 			model.length = json.length;
 			models.push(model);
-			//console.log(model.hash + ' ' + model.length + ' ' + model.path);
 		}
-		if (key == "$ref") {
+		//else if (gState.depth>0) {
+		//	//console.log(json.length+' '+model.definition.type);
+		//}
+		if (state.key == "$ref") {
 			var ref = obj;
 			if (ref.startsWith('#/definitions/')) {
 				ref = ref.replace('#/definitions/','');
-				var sd = _.find(state.definitions,function(o) { return o.name == ref;} );
+				var sd = _.find(gState.definitions,function(o) { return o.name == ref;} );
 				if (sd) {
 					sd.seen++;
 				}
@@ -56,7 +62,7 @@ function analyse(state,definition,models,base,key) {
 function extractModels(state,src,depth) {
 	var models = [];
 
-	if ((depth==0) && (src.definitions)) {
+	if ((state.depth==0) && (src.definitions)) {
 		for (var d in src.definitions) {
 			var definition = src.definitions[d];
 			if (!definition["$ref"]) {
@@ -65,13 +71,12 @@ function extractModels(state,src,depth) {
 		}
 	}
 
-	common.forEachAction(src,function(action,name){
-		var aptr = sptr + '/' + name; // actions don't need escaping
+	common.forEachAction(src,function(action,aptr,name){
 
 		for (var p in action.parameters) {
 			var param = action.parameters[p];
 			if ((param.schema)) {//&& (!param.schema["$ref"])) {
-				var pptr = aptr + '/' + p; // p is an array index, does not need escaping
+				var pptr = aptr + '/'; // + p; // p is an array index, does not need escaping
 				analyse(state,param.schema,models,pptr,p);
 			}
 		}
@@ -80,26 +85,18 @@ function extractModels(state,src,depth) {
 			var response = action.responses[r];
 			if (response.schema) {//&& (!response.schema["$ref"])) {
 				var rptr = aptr + '/'; // + r; // r is an HTTP response status code, does not need escaping
-				analyse(state,response.schema,models,rptr,r);
+				analyse(state,response,models,rptr,r);
 			}
 		}
 
 	});
-	if (src.paths) {
-		for (var s in src.paths) {
-			var sptr = '#/'+jptr.jpescape(s);
-			for (var a in src.paths[s]) {
-
-			}
-		}
-	}
 
 	if (src.parameters) {
 		var cptr = '#/parameters';
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
 			if ((param.schema) && (!param.schema["$ref"])) {
-				var pptr = cptr + '/' + jptr.jpescape(p);
+				var pptr = cptr + '/'; // + jptr.jpescape(p);
 				analyse(state,param.schema,models,pptr,p);
 			}
 		}
@@ -218,14 +215,18 @@ module.exports = {
 		if (options.expand) {
 			src = deref.expand(src);
 		}
+		// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
+		if (!src.definitions) {
+			src.definitions = {};
+		}
 
 		var changes = 1;
-		var depth = 0;
+		state.depth = 0;
 		while (changes>0) {
 			changes = 0;
 			state.matches = [];
-			state.definitions = [];
 
+			state.definitions = [];
 			for (var d in src.definitions) {
 				var entry = {};
 				entry.name = d;
@@ -234,7 +235,7 @@ module.exports = {
 			}
 
 			console.log('Extracting models');
-			state.models = extractModels(state,src,depth);
+			state.models = extractModels(state,src);
 
 			console.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
 			state.models = state.models.sort(function(a,b){
@@ -247,36 +248,33 @@ module.exports = {
 				return 0;
 			});
 
-			matchModels(state);
+			if (state.models.length>0) {
+				matchModels(state);
 
-			// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
-			if (!src.definitions) {
-				src.definitions = {};
-			}
+				console.log('Processing matches');
+				for (var h in state.matches) {
+					var match = state.matches[h];
+					var newName = getBestName(state,match);
 
-			console.log('Processing matches');
-			for (var h in state.matches) {
-				var match = state.matches[h];
-				var newName = getBestName(state,match);
+					//console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
+					if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
 
-				//console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
-				if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
+					src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
 
-				src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
+					for (var l=match.locations.length-1;l>=0;l--) {
+						var location = match.locations[l];
+						//if (options.verbose>1)
+						//console.log('  @ '+location.path);
 
-				for (var l=match.locations.length-1;l>=0;l--) {
-					var location = match.locations[l];
-					//if (options.verbose>1)
-					//console.log('  @ '+location.path);
-
-					// this is where the matching model is actually replaced by its $ref
-					var newDef = {};
-					newDef["$ref"] = '#/definitions/'+newName;
-					location.parent[location.name] = newDef;
-					changes++;
+						// this is where the matching model is actually replaced by its $ref
+						var newDef = {};
+						newDef["$ref"] = '#/definitions/'+newName;
+						location.parent[location.name] = newDef;
+						changes++;
+					}
 				}
 			}
-			if (depth==0) {
+			if (state.depth==0) {
 				console.log('Removing unused definitions');
 				for (var d in state.definitions) {
 					var def = state.definitions[d];
@@ -285,10 +283,10 @@ module.exports = {
 						delete src.definitions[def.name];
 					}
 				}
-				common.clean(src,'definitions');
 			}
-			depth++;
+			state.depth++;
 		}
+		common.clean(src,'definitions');
 
 		return src;
 	}
