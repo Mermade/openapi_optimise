@@ -11,18 +11,18 @@ module.exports = {
 	defaultOptimisations : function(swagger,options) {
 		var opt = _.cloneDeep(swagger);
 
-		opt = parameters.optimise(opt);
-		opt = responses.optimise(opt);
+		opt = parameters.optimise(opt,options);
+		opt = responses.optimise(opt,options);
 		opt = tags.optimise(opt,options);
-		opt = prodcons.optimise(opt);
-		opt = definitions.optimise(opt);
+		opt = prodcons.optimise(opt,options);
+		opt = definitions.optimise(opt,options);
 
 		return opt;
 	},
 	nonDefaultOptimisations: function(swagger,options) {
 		var opt = _.cloneDeep(swagger);
 
-		opt = models.optimise(opt,{});
+		opt = models.optimise(opt,options);
 
 		return opt;
 	}
