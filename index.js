@@ -13,7 +13,7 @@ module.exports = {
 
 		opt = parameters.optimise(opt);
 		opt = responses.optimise(opt);
-		opt = tags.optimise(opt);
+		opt = tags.optimise(opt,options);
 		opt = prodcons.optimise(opt);
 		opt = definitions.optimise(opt);
 

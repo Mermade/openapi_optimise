@@ -1,7 +1,10 @@
+var _ = require('lodash');
 var common = require('./common.js');
 
 var state = {};
 state.tags = [];
+
+// TODO option to preserve tags with vendor-extensions
 
 function gatherTags(src) {
 	for (var t in src.tags) {
@@ -21,10 +24,11 @@ function gatherTags(src) {
 			}
 		}
 	});
+	return state.tags;
 }
 
 module.exports = {
-	optimise : function(src) {
+	optimise : function(src,options) {
 		if (src.tags) {
 			console.log('Removing unused tags');
 			state.tags = gatherTags(src);
@@ -32,7 +36,9 @@ module.exports = {
 				var tag = state.tags[t];
 				if (tag.seen<=0) {
 					console.log('  Deleting '+tag.definition.name);
-					src.tags.splice(t,1);
+					_.remove(src.tags,function(o){
+						return (o.name == tag.definition.name);
+					});
 				}
 			}
 			common.clean(src,'tags');
