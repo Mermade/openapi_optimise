@@ -10,6 +10,8 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Converting repeated parameters into common parameters
 * Removing duplicated common parameters
 * Removing unused common parameters
+* Promotion of repeated mandatory action-level parameters to path-level
+* Removal of redundant parameter default properties
 * Removing redundant consumes/produces
 * Compression of different representations of functionally equivalent empty schemas
 * Removing unused and empty tags 
@@ -27,7 +29,6 @@ As these currently consume excessive memory or have not been sufficiently tested
 
 ## TODO
 
-* Parameters at path (not operation) level
 * Tidy-up logging to console, controlled by a verbosity option
 
 ## Included command-line tools (names subject to change, and to be replaced with command-line options)

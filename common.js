@@ -27,7 +27,7 @@ empty.push(e4);
 * parents,keys,paths (output)
 *
 * Initially you can pass in an empty object as the state or;
-* You can pass in a key and path if you are starting the descent not at the root of 
+* You can pass in a key and path if you are starting the descent not at the root of
 * ano object, but wish the returned paths to be relative to the root
 */
 function recurse(obj,state,callback) {
@@ -93,6 +93,13 @@ module.exports = {
 			if (_.isEqual(empty[e],obj)) return true;
 		}
 		return false;
+	},
+
+	forEachPath : function(src,callback) {
+		for (var p in src.paths) {
+			var pptr = '#/'+jptr.jpescape(p);
+			callback(src.paths[p],pptr);
+		}
 	},
 
 	forEachAction : function(src,callback) {

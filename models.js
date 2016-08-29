@@ -27,7 +27,6 @@ function analyse(gState,definition,models,base,key) {
 		var model = {};
 		if (common.isEmpty(obj)) {
 			model.definition = {};
-			console.log('empty');
 		}
 		else {
 			model.definition = obj;

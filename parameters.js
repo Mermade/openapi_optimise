@@ -3,7 +3,34 @@
 var common = require('./common.js');
 var _ = require('lodash');
 
-// TODO removal of redundant defaults such as collectionFormat=csv
+function transform(param) {
+	newParam = _.cloneDeep(param);
+	if ((newParam["in"] != 'path') && (newParam.required === false)) {
+		delete newParam.required;
+	}
+	if (newParam.allowEmptyValue === false) {
+		delete newParam.allowEmptyValue;
+	}
+	if (newParam.collectionFormat == 'csv') {
+		delete newParam.collectionFormat;
+	}
+	if (newParam.exclusiveMaximum === false) {
+		delete newParam.exclusiveMaximum;
+	}
+	if (newParam.exclusiveMinimum === false) {
+		delete newParam.exclusiveMinimum;
+	}
+	if (newParam.minLength === 0) {
+		delete newParam.minLength;
+	}
+	if (newParam.minItems === 0) {
+		delete newParam.minItems;
+	}
+	if (newParam.uniqueItems === false) {
+		delete newParam.uniqueItems;
+	}
+	return newParam;
+}
 
 function uniq(params,name) {
 	var suffix = '';
@@ -13,49 +40,58 @@ function uniq(params,name) {
 	return name+suffix;
 }
 
-function store(state,param,name,p,action,pa,common) {
-	var found = false;
-	for (var e in state.cache) {
-		var entry = state.cache[e];
-		if (_.isEqual(entry.definition,param)) {
+function store(state,param,name,p,action,pa,level) {
+	if (param["$ref"]) {
+		var refName = param["$ref"].replace('#/parameters/','');
+		for (var c in state.cache) {
+			var cp = state.cache[c];
+			for (var l in cp.locations) {
+				var locn = cp.locations[l];
+				if ((locn.level==0) && (cp.name == refName)) {
+					cp.seen = true;
+				}
+			}
+		}
+	}
+	else {
+		var found = false;
+		var newp = transform(param);
+		for (var e in state.cache) {
+			var entry = state.cache[e];
+			if (_.isEqual(entry.definition,newp)) {
+				console.log('Info: Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
+				var location = {};
+				location.name = name;
+				location.path = p;
+				location.action = action;
+				location.index = pa;
+				location.level = level;
+				location.operations = 0;
+				entry.locations.push(location);
+				found = true;
+			}
+			else if (_.isMatch(entry.definition,param)) {
+				console.log('Info: parameter subset detected');
+				console.log('  '+entry.name+ ' @ '+entry.locations[0].action+' '+entry.locations[0].path);
+				console.log('  '+name+' @ '+action+' '+p);
+			}
+		}
+		if (!found) {
+			var entry = {};
+			entry.definition = newp;
+			entry.name = name;
+			entry.locations = [];
+			entry.seen = (level>0);
 			var location = {};
+			location.name = name;
 			location.path = p;
 			location.action = action;
 			location.index = pa;
+			location.level = level;
+			location.operations = 0;
 			entry.locations.push(location);
-			found = true;
-			if (common) {
-				console.log('Info: common parameters '+entry.name+' and '+name+' are identical');
-				var dupe = {};
-				dupe["from"] = name;
-				dupe["to"] = entry.name;
-				state.rename.push(dupe);
-			}
+			state.cache.push(entry);
 		}
-		else if (_.isMatch(entry.definition,param)) {
-			console.log('Info: parameter subset detected');
-			console.log('  '+entry.name+ ' @ '+entry.locations[0].action+' '+entry.locations[0].path);
-			console.log('  '+name+' @ '+action+' '+p);
-		}
-	}
-	if (!found) {
-		var entry = {};
-		entry.definition = param;
-		entry.name = name;
-		entry.common = common;
-		entry.locations = [];
-		var location = {};
-		location.path = p;
-		location.action = action;
-		location.index = pa;
-		entry.locations.push(location);
-		state.cache.push(entry);
-	}
-	if (common) {
-		var cp = {};
-		cp.name = name;
-		cp.seen = 0;
-		state.common.push(cp);
 	}
 }
 
@@ -65,91 +101,119 @@ module.exports = {
 
 		var state = {};
 		state.cache = [];
-		state.rename = [];
-		state.common = [];
+		state.paths = [];
 
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
-			store(state,param,p,'#/parameters/'+p,'all',-1,true);
+			store(state,param,p,'#/parameters/'+p,'all',-1,0);
 		}
 
 		for (var p in src.paths) {
 			var path = src.paths[p];
 
-			// TODO parameters at PATH level
+			for (var pa in path.parameters) {
+				var param = path.parameters[pa];
+				store(state,param,param.name,p,'all',-1,1);
+			}
 
+			var operations = 0;
 			for (var a in common.actions) {
 				var action = path[common.actions[a]];
 				if (action) {
-
+					operations++;
 					for (var pa in action.parameters) {
 						var param = action.parameters[pa];
-
-						if (param["$ref"]) {
-							var refName = param["$ref"].replace('#/parameters/','');
-							for (var c in state.common) {
-								var cp = state.common[c];
-								if (cp.name == refName) {
-									duplicate = false;
-									for (var r in state.rename) {
-										var dupe = state.rename[r];
-										if (dupe["from"] == refName) duplicate = true;
-									}
-									if (!duplicate) cp.seen++;
-								}
-							}
-						}
-						else {
-							store(state,param,param.name,p,common.actions[a],pa,false);
-						}
+						store(state,param,param.name,p,common.actions[a],pa,2);
 					}
 				}
 			}
 		}
+
+		var spath = {};
+		spath.path = p;
+		spath.operations = operations;
+		state.paths.push(spath);
 
 		for (var e in state.cache) {
 			var entry = state.cache[e];
 			if (entry.locations.length>1) {
 				var newName = entry.name;
-				if (!entry.common) {
+				if (entry.locations[0].level==2) {
 					newName = uniq(src.parameters,entry.definition.name);
 					if (!src.parameters) {
 						src.parameters = {};
 					}
 				}
-				src.parameters[newName] = entry.definition;
+				src.parameters[newName] = entry.definition; // will apply transforms
 				console.log('The following parameters can be merged into #/parameters/'+newName);
 				for (var l in entry.locations) {
 					var location = entry.locations[l];
 					console.log('  '+entry.definition.name+' @ '+location.action+' '+location.path);
 					if (location.action != 'all') {
-						var newDef = {};
-						newDef["$ref"] = '#/parameters/'+newName;
-						src.paths[location.path][location.action].parameters[location.index] = newDef;
+						if (entry.locations[0].level == 1) {
+							// redundant duplication (override with no differences) of path-level parameter
+							delete src.paths[location.path][location.action].parameters[location.index];
+						}
+						else {
+							var newDef = {};
+							newDef["$ref"] = '#/parameters/'+newName;
+							src.paths[location.path][location.action].parameters[location.index] = newDef;
+						}
 					}
 				}
 			}
 		}
 
-		if (state.rename.length>0) {
-			console.log('Renaming duplicated common parameters');
+		console.log('Promoting common required parameters to path-level');
+		common.forEachPath(src,function(path,jptr){
+			var spath = _.find(state.paths,function(o) { return o.path == path});
+			if ((spath) && (spath.operations>1)) {
+				for (var e in state.cache) {
+					var entry = state.cache[e];
+					for (var l in entry.locations) {
+						var locn = entry.locations[l];
+						if ((locn.level == 2) && (entry.definition.required) && (locn.operations >= spath.operations)) {
+							src.paths[path].parameters.push(entry.definition);
+							src.paths[p][locn.action].parameters.splice(locn.index,1);
+						}
+					}
+				}
+			}
+		});
 
-			for (var p in src.paths) {
-				var path = src.paths[p];
-				for (var a in common.actions) {
-					var action = path[common.actions[a]];
-					if (action) {
-						for (var pa in action.parameters) {
-							var param = action.parameters[pa];
+		console.log('Renaming duplicated common parameters');
+		for (var p in src.paths) {
+			var path = src.paths[p];
+			for (var a in common.actions) {
+				var action = path[common.actions[a]];
+				if (action) {
+					for (var pa in action.parameters) {
+						var param = action.parameters[pa];
 
-							if (param["$ref"]) {
-								var refName = param["$ref"].replace('#/parameters/','');
-								for (var r in state.rename) {
-									var ren = state.rename[r];
-									if (ren["from"] == refName) {
-										param["$ref"] = '#/parameters/'+ren["to"];
+						if (param["$ref"]) {
+							var refName = param["$ref"].replace('#/parameters/','');
+
+							var matchName = '';
+							for (var e in state.cache) {
+								var entry = state.cache[e];
+								if (entry.name == refName) {
+									matchName = refName;
+									break;
+								}
+								else {
+									for (var l in entry.locations) {
+										var locn = entry.locations[l];
+										if ((locn.level == 0) && (locn.name == refName)) {
+											matchName = entry.name; // not locn.name
+											break;
+										}
 									}
 								}
+								if (matchName) break;
+							}
+
+							if (matchName) {
+								param["$ref"] = '#/parameters/'+matchName;
 							}
 						}
 					}
@@ -157,17 +221,18 @@ module.exports = {
 			}
 		}
 
-		if (state.common.length>0) {
-			console.log('Checking common parameters are used');
-			for (var c in state.common) {
-				var cp = state.common[c];
-				if (cp.seen <= 0) {
-					console.log('  Deleting '+cp.name);
-					delete src.parameters[cp.name];
-				}
+		console.log('Checking common parameters are used');
+		for (var p in state.cache) {
+			var entry = state.cache[p];
+			if ((entry.locations[0].level==0) && (!entry.seen)) {
+				console.log('  Deleting '+entry.name);
+				delete src.parameters[entry.name];
 			}
 		}
 		common.clean(src,'parameters');
+		common.forEachPath(src,function(path){
+			common.clean(path,'parameters');
+		});
 
 		return src;
 
