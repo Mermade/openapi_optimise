@@ -98,7 +98,7 @@ module.exports = {
 	forEachPath : function(src,callback) {
 		for (var p in src.paths) {
 			var pptr = '#/'+jptr.jpescape(p);
-			callback(src.paths[p],pptr);
+			callback(src.paths[p],pptr,p);
 		}
 	},
 

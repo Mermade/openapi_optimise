@@ -3,6 +3,8 @@
 var common = require('./common.js');
 var _ = require('lodash');
 
+var state = {};
+
 function transform(param) {
 	newParam = _.cloneDeep(param);
 	if ((newParam["in"] != 'path') && (newParam.required === false)) {
@@ -59,7 +61,9 @@ function store(state,param,name,p,action,pa,level) {
 		for (var e in state.cache) {
 			var entry = state.cache[e];
 			if (_.isEqual(entry.definition,newp)) {
-				console.log('Info: Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
+				if (state.options.v>=2) {
+					console.log('Info: Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
+				}
 				var location = {};
 				location.name = name;
 				location.path = p;
@@ -97,9 +101,9 @@ function store(state,param,name,p,action,pa,level) {
 
 module.exports = {
 
-	optimise : function(src) {
+	optimise : function(src,options) {
 
-		var state = {};
+		state.options = options;
 		state.cache = [];
 		state.paths = [];
 
@@ -127,12 +131,11 @@ module.exports = {
 					}
 				}
 			}
+			var spath = {};
+			spath.path = p;
+			spath.operations = operations;
+			state.paths.push(spath);
 		}
-
-		var spath = {};
-		spath.path = p;
-		spath.operations = operations;
-		state.paths.push(spath);
 
 		for (var e in state.cache) {
 			var entry = state.cache[e];
@@ -165,9 +168,9 @@ module.exports = {
 		}
 
 		console.log('Promoting common required parameters to path-level');
-		common.forEachPath(src,function(path,jptr){
-			var spath = _.find(state.paths,function(o) { return o.path == path});
-			if ((spath) && (spath.operations>1)) {
+		common.forEachPath(src,function(path,jptr,name){
+			var spath = _.find(state.paths,function(o) { return o.path == name});
+			if (spath.operations>1) {
 				for (var e in state.cache) {
 					var entry = state.cache[e];
 					for (var l in entry.locations) {
