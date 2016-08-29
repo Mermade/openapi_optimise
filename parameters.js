@@ -3,6 +3,8 @@
 var common = require('./common.js');
 var _ = require('lodash');
 
+// TODO removal of redundant defaults such as collectionFormat=csv
+
 function uniq(params,name) {
 	var suffix = '';
 	while (params && params[name+suffix]) {
@@ -73,6 +75,9 @@ module.exports = {
 
 		for (var p in src.paths) {
 			var path = src.paths[p];
+
+			// TODO parameters at PATH level
+
 			for (var a in common.actions) {
 				var action = path[common.actions[a]];
 				if (action) {
