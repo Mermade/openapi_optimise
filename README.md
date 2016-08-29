@@ -11,6 +11,7 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Removing duplicated common parameters
 * Removing unused common parameters
 * Removing redundant consumes/produces
+* Compression of different representations of functionally equivalent empty schemas
 * Removing unused and empty tags 
 * Removing empty definitions
 * Removing empty responses
@@ -19,7 +20,6 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 
 ## Not enabled by default are
 
-* Compression of different representations of functionally equivalent empty schemas
 * Optional expansion of all *local* non-circular $ref's prior to
 * Automatic creation of $ref's for repeated model elements
 
@@ -27,10 +27,10 @@ As these currently consume excessive memory or have not been sufficiently tested
 
 ## TODO
 
-* Removal of object types where an enum only has one value and no format etc is specified?
-* Extract topological sort/circular reference detection to own module
+* Parameters at path (not operation) level
+* Tidy-up logging to console, controlled by a verbosity option
 
-## Included command-line tools (names subject to change)
+## Included command-line tools (names subject to change, and to be replaced with command-line options)
 
 * `openapi_optimise` applies all default optimisations
 * `nonDefault` applies the currently non-default optimisations
