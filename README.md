@@ -31,9 +31,21 @@ As these currently consume excessive memory or have not been sufficiently tested
 
 * Tidy-up logging to console, controlled by a verbosity option
 
-## Included command-line tools (names subject to change, and to be replaced with command-line options)
+## Included command-line tools
 
 * `openapi_optimise` applies all default optimisations
-* `nonDefault` applies the currently non-default optimisations
-* `expand` applies the de-referencing algorithm. May create huge output on large specifications
-* `detab` simply serialises the input as a JSON object with no linefeeds or indentation
+
+````
+openapi_optimise {infile} [{outfile}]
+
+Options:
+  -h, --help        Show help                                          [boolean]
+  -v, --verbose     verbosity level, repeat for more logging             [count]
+  -n, --nondefault  apply non-default operations                       [boolean]
+  -e, --expand      expand all local $refs before any model compression[boolean]
+  -d, --deindent    no indentation/linefeeds                           [boolean]
+  -y, --yaml        read and write specification in yaml format (default JSON)
+                                                                       [boolean]
+  -i, --yamlinput   read specification in yaml format                  [boolean]
+  -o, --yamloutput  write specification in yaml format                 [boolean]
+````
