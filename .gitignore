@@ -3,5 +3,6 @@ node_modules/
 test/
 test*
 *.json
+*.yaml
 *.new
 *.old
