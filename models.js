@@ -1,6 +1,5 @@
 /*
 * optimise schema objects (models) within openapi / swagger specifications
-* TODO expand to handle generic JSON Schemas (though there are other tools for this)
 */
 
 var crypto = require('crypto');
