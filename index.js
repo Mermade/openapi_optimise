@@ -4,6 +4,7 @@ var responses = require('./responses.js');
 var tags = require('./tags.js');
 var prodcons = require('./prodcons.js');
 var definitions = require('./definitions.js');
+var security = require('./security.js');
 var empty = require('./empty.js');
 var models = require('./models.js');
 
@@ -17,6 +18,7 @@ module.exports = {
 		opt = responses.optimise(opt,options);
 		opt = tags.optimise(opt,options);
 		opt = prodcons.optimise(opt,options);
+		opt = security.optimise(opt,options);
 		opt = definitions.optimise(opt,options);
 
 		return opt;
