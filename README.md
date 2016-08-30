@@ -29,6 +29,16 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 
 As these currently consume excessive memory or have not been sufficiently tested
 
+## Usage
+
+````javascript
+var opt = require('openapi_optimise');
+
+var options = {};
+// options.verbose = 1;
+var dest = opt.defaultOptimisations(swagger,options);
+````
+
 ## Included command-line tool
 
 * `openapi_optimise` applies all safe optimisations by default
