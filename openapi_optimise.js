@@ -64,7 +64,7 @@ else {
 
 var dest = opt.defaultOptimisations(src,argv);
 
-if (argv.expand) {
+if ((argv.expand) && (!argv.nondefault)) {
 	dest = deref.expand(dest,argv);
 }
 if (argv.nondefault) {

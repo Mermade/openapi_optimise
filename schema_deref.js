@@ -17,7 +17,7 @@ module.exports = {
 	expand : function(src,options) {
 
 		logger = common.logger(options.verbose);
-		var circles = circular.getCircularRefs(src);
+		var circles = circular.getCircularRefs(src,options);
 
 		var lib = _.cloneDeep(src);
 		delete src.parameters;

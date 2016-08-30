@@ -8,7 +8,7 @@ var common = require('./common.js');
 var deref = require('./schema_deref.js');
 var jptr = require('jgexml/jpath.js');
 
-var MIN_LENGTH = '{"$ref": "#/definitions/m"},{"m": {'.length;
+var MIN_LENGTH = '{"$ref": "#/definitions/m"},{"m": {}'.length;
 var logger;
 
 function sha1(s) {
@@ -230,7 +230,7 @@ module.exports = {
 		// when compressing again. It is also time and memory costly. This is available by setting options.expand = true
 
 		if (options.expand) {
-			src = deref.expand(src);
+			src = deref.expand(src,options);
 		}
 		// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
 		if (!src.definitions) {
@@ -274,8 +274,8 @@ module.exports = {
 					var match = state.matches[h];
 					var newName = getBestName(state,match);
 
-					//logger.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
-					logger.info(JSON.stringify(match.model.definition));
+					logger.debug('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
+					logger.debug(JSON.stringify(match.model.definition));
 
 					var stillThere = jptr.jptr(src,match.locations[0].path);
 
@@ -287,7 +287,7 @@ module.exports = {
 
 					for (var l=match.locations.length-1;l>=stop;l--) {
 						var location = match.locations[l];
-						logger.info('  @ '+location.path);
+						logger.debug('  @ '+location.path);
 
 						// this is where the matching model is actually replaced by its $ref
 						var newDef = {};
