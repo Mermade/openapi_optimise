@@ -10,35 +10,51 @@ var deref = require('./schema_deref.js')
 var argv = require('yargs')
 	.usage('openapi_optimise {infile} [{outfile}]')
 	.count('verbose')
-	.alias('v', 'verbose')
-	.alias('n', 'nondefault')
+	.alias('v','verbose')
+	.alias('n','nondefault')
 	.describe('nondefault','apply non-default operations')
 	.boolean('nondefault')
 	.describe('verbose','verbosity level, repeat for more logging')
-	.boolean('expand')
-	.alias('e','expand')
-	.describe('expand','expand all local $refs before any model compression')
 	.alias('d','deindent')
 	.boolean('deindent')
 	.describe('deindent','no indentation/linefeeds')
+	.boolean('expand')
+	.alias('e','expand')
+	.describe('expand','expand all local $refs before any model compression')
+	.boolean('inline')
+	.alias('i','inline')
+	.describe('inline','inline $refs rather than moving to #/definitions')
+	.boolean('jsyaml')
+	.alias('j','jsyaml')
+	.describe('jsyaml','use jsyaml for output, default jgexml')
+	.boolean('preserve-tags')
+	.alias('t','preserve-tags')
+	.describe('preserve-tags','preserve tags with vendor extensions')
 	.boolean('yaml')
 	.alias('y','yaml')
 	.describe('yaml','read and write specification in yaml format (default JSON)')
-	.boolean('yamlinput')
-	.alias('i','yamlinput')
-	.describe('yamlinput','read specification in yaml format')
-	.boolean('yamloutput')
-	.alias('o','yamloutput')
-	.describe('yamloutput','write specification in yaml format')
+	.boolean('yamlread')
+	.alias('r','yamlread')
+	.describe('yamlread','read specification in yaml format')
+	.boolean('yamlwrite')
+	.alias('w','yamlwrite')
+	.describe('yamlwrite','write specification in yaml format')
+	.boolean('show')
+	.alias('s','show')
 	.demand(1)
 	.help('h')
     .alias('h', 'help')
 	.argv;
 
+if (argv.show) {
+	console.log(JSON.stringify(argv,null,2));
+	process.exit();
+}
+
 var infile = argv._[0];
 
 var src;
-if ((argv.yaml) || (argv.yamlinput)) {
+if ((argv.yaml) || (argv.yamlread)) {
 	var srcStr = fs.readFileSync(path.resolve(infile),'utf8');
 	src = yaml.safeLoad(srcStr);
 }
@@ -58,8 +74,13 @@ if (argv.nondefault) {
 var outfile = (argv._.length>1 ? argv._[1] : '');
 
 var outStr;
-if ((argv.yaml) || (argv.yamloutput)) {
-	outStr = j2y.getYaml(dest);
+if ((argv.yaml) || (argv.yamlwrite)) {
+	if (argv.jsyaml) {
+		outStr = yaml.safeDump(dest);
+	}
+	else {
+		outStr = j2y.getYaml(dest);
+	}
 }
 else {
 	var indent = (argv.deindent ? '' : '\t');

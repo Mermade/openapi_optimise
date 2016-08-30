@@ -41,9 +41,6 @@ function analyse(gState,definition,models,base,key) {
 			model.length = json.length;
 			models.push(model);
 		}
-		//else if (gState.depth>0) {
-		//	//console.log(json.length+' '+model.definition.type);
-		//}
 		if (state.key == "$ref") {
 			var ref = obj;
 			if (ref.startsWith('#/definitions/')) {
@@ -75,7 +72,7 @@ function extractModels(state,src,depth) {
 		for (var p in action.parameters) {
 			var param = action.parameters[p];
 			if ((param.schema)) {//&& (!param.schema["$ref"])) {
-				var pptr = aptr + '/'; // + p; // p is an array index, does not need escaping
+				var pptr = aptr + '/';
 				analyse(state,param.schema,models,pptr,p);
 			}
 		}
@@ -83,7 +80,7 @@ function extractModels(state,src,depth) {
 		for (var r in action.responses) {
 			var response = action.responses[r];
 			if (response.schema) {//&& (!response.schema["$ref"])) {
-				var rptr = aptr + '/'; // + r; // r is an HTTP response status code, does not need escaping
+				var rptr = aptr + '/';
 				analyse(state,response,models,rptr,r);
 			}
 		}
@@ -95,7 +92,7 @@ function extractModels(state,src,depth) {
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
 			if ((param.schema) && (!param.schema["$ref"])) {
-				var pptr = cptr + '/'; // + jptr.jpescape(p);
+				var pptr = cptr + '/';
 				analyse(state,param.schema,models,pptr,p);
 			}
 		}
@@ -139,6 +136,29 @@ function getBestName(state,match) {
 	return result;
 }
 
+function deepCompare(state) {
+	var index = 0;
+	while (index<state.models.length) {
+		var compare = index+1;
+		while ((compare<state.models.length) && (state.models[index].length==state.models[compare].length)) {
+			if (state.models[index].hash != state.models[compare].hash) {
+				if (_.isEqual(state.models[index].definition,state.models[compare].definition)) {
+					var reset = compare;
+					while ((reset<state.models.length) && (state.models[reset].length == state.models[index].length)) {
+						if (state.models[reset].hash == state.models[compare].hash) {
+							console.log('  Equivalent '+state.models[reset].hash+' and '+state.models[index].hash);
+							state.models[reset].hash = state.models[index].hash;
+						}
+						reset++;
+					}
+				}
+			}
+			compare++;
+		}
+		index=compare;
+	}
+}
+
 function matchModels(state) {
 	var percent = -1;
 	console.log('Matching models');
@@ -159,11 +179,11 @@ function matchModels(state) {
 				if ((match.model.length!=model.length) || (match.model.hash != model.hash)) break; // break out early if length or hash changes
 				if (_.isEqual(match.model.definition,model.definition)) {
 					matchLocn = h;
-					var location = {};
-					location.path = compare.path;
-					location.parent = compare.parent;
-					location.name = compare.name;
-					match.locations.push(location);
+					var locn = {};
+					locn.path = compare.path;
+					locn.parent = compare.parent;
+					locn.name = compare.name;
+					match.locations.push(locn);
 					break;
 				}
 			}
@@ -208,9 +228,6 @@ module.exports = {
 		// we could always expand all existing $ref's here, but it is unlikely we would do a better job of renaming them all
 		// when compressing again. It is also time and memory costly. This is available by setting options.expand = true
 
-		// TODO, it should be an option whether to extract the first occurrence of a model and $ref it (the default),
-		// or to leave it in place and all the others to the original
-
 		if (options.expand) {
 			src = deref.expand(src);
 		}
@@ -248,6 +265,7 @@ module.exports = {
 			});
 
 			if (state.models.length>0) {
+				deepCompare(state);
 				matchModels(state);
 
 				console.log('Processing matches');
@@ -258,18 +276,31 @@ module.exports = {
 					//console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
 					if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
 
-					src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
+					var stillThere = jptr.jptr(src,match.locations[0].path);
 
-					for (var l=match.locations.length-1;l>=0;l--) {
+					var stop = 1;
+					if ((!options.inline) || (!stillThere)) {
+						src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
+						stop = 0;
+					}
+
+					for (var l=match.locations.length-1;l>=stop;l--) {
 						var location = match.locations[l];
-						//if (options.verbose>1)
-						//console.log('  @ '+location.path);
+						if (options.verbose>1) {
+							console.log('  @ '+location.path);
+						}
 
 						// this is where the matching model is actually replaced by its $ref
 						var newDef = {};
-						newDef["$ref"] = '#/definitions/'+newName;
+						if ((options.inline) && (stillThere)) {
+							newDef["$ref"] = match.locations[0].path;
+						}
+						else {
+							newDef["$ref"] = '#/definitions/'+newName;
+						}
 						location.parent[location.name] = newDef;
 						changes++;
+						stillThere = jptr.jptr(src,match.locations[0].path);
 					}
 				}
 			}

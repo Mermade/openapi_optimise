@@ -4,13 +4,17 @@ var common = require('./common.js');
 var state = {};
 state.tags = [];
 
-// TODO option to preserve tags with vendor-extensions
-
 function gatherTags(src) {
 	for (var t in src.tags) {
 		var tag = {};
 		tag.definition = src.tags[t];
 		tag.seen = 0;
+		tag.vendorExtension = false;
+		common.recurse(src.tags[t],{},function(obj,rState){
+			if (rState.key.startsWith('x-')) {
+				tag.vendorExtension = true;
+			}
+		});
 		state.tags.push(tag);
 	}
 	common.forEachAction(src,function(action){
@@ -30,11 +34,12 @@ function gatherTags(src) {
 module.exports = {
 	optimise : function(src,options) {
 		if (src.tags) {
+			state.options = options;
 			console.log('Removing unused tags');
 			state.tags = gatherTags(src);
 			for (var t in state.tags) {
 				var tag = state.tags[t];
-				if (tag.seen<=0) {
+				if ((tag.seen<=0) && ((!options.preserveTags) || (!tag.vendorExtension))) {
 					console.log('  Deleting '+tag.definition.name);
 					_.remove(src.tags,function(o){
 						return (o.name == tag.definition.name);

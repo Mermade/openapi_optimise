@@ -2,7 +2,7 @@ var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 
 function dump(defs,title) {
-	console.log(title);
+	if (defs.length>0) console.log(title);
 	for (var d in defs) {
 		var def = defs[d];
 		console.log(def.ref+' '+def.seen+' '+def.children.length);
@@ -98,7 +98,7 @@ function topoSort(src) {
 		//dump(defs,' subsequent');
 	}
 
-	//dump(defs,' final');
+	dump(defs,'Circular refs:');
 	return defs;
 }
 

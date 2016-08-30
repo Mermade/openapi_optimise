@@ -36,7 +36,7 @@ function recurse(obj,state,callback) {
 		state.parents = [];
 		state.depth = 0;
 	}
-	var first = (state.depth == 0); //_.isEqual(state.parents,[]);
+	var first = ((typeof state.depth == 'undefined') || (state.depth == 0)); //_.isEqual(state.parents,[]);
 	if (!state.keys) {
 		state.keys = [];
 		state.keys.push(state.key ? state.key : state.key = '');

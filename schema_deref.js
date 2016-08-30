@@ -39,9 +39,10 @@ module.exports = {
 			common.recurse(lib.definitions,{},function(obj,state){
 				if (state.key == '$ref') {
 					var reference = obj;
-
+					//console.log(reference);
 					if (!circular.isCircular(circles,reference)) {
 						var result = jptr.jptr(lib,reference);
+						//console.log(result);
 						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
 						changes++;
 					}

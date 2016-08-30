@@ -24,7 +24,7 @@ module.exports = {
 	nonDefaultOptimisations: function(swagger,options) {
 		var opt = _.cloneDeep(swagger);
 
-		opt = models.optimise(opt,options);
+		opt = models.optimise(opt,options); // optionally handles expand
 
 		return opt;
 	}
