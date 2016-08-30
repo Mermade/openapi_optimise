@@ -1,11 +1,14 @@
 var _ = require('lodash');
 var common = require('./common.js');
 
+var logger;
+
 module.exports = {
 
-	optimise : function(src) {
+	optimise : function(src,options) {
+		logger = common.logger(options.verbose);
 		if (src.produces || src.consumes) {
-			console.log('Optimising produces/consumes');
+			logger.log('Optimising produces/consumes');
 			common.forEachAction(src,function(action){
 				if (src.produces && action.produces && _.isEqual(src.produces,action.produces)) {
 					delete action.produces;

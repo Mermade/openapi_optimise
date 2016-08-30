@@ -73,13 +73,26 @@ function recurse(obj,state,callback) {
 	return obj;
 }
 
+function logger(verbosity) {
+	this.verbosity = verbosity;
+	this.log = function(s) {
+		if (this.verbosity>0) console.log(s);
+	}
+	this.info = function(s) {
+		if (this.verbosity>1) console.log(s);
+	}
+	this.debug = function(s) {
+		if (this.verbosity>2) console.log(s);
+	}
+}
+
 module.exports = {
 
 	recurse : recurse,
 
 	clean : function(parent,name) {
 		if ((parent[name]) && (Object.keys(parent[name]).length<=0)) {
-			console.log('No '+name+' required');
+			logger.log('No '+name+' required');
 			delete parent[name];
 		}
 	},
@@ -112,6 +125,10 @@ module.exports = {
 				}
 			}
 		}
+	},
+
+	logger : function(verbosity) {
+		return new logger(verbosity);
 	}
 
 };

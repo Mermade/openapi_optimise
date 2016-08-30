@@ -17,8 +17,10 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Removing unused and empty tags 
 * Removing empty definitions
 * Removing empty responses
-* Using tabs for indenting the output if serialised by the included utilities
-* Using UTF8 encoding for the output if serialised by the included utilities
+* Removing unused securityDefinitions
+* Using tabs for indenting the output if serialised as JSON by the included utility
+* Using a compact yaml format if serialised as YAML by the included utility
+* Using UTF8 encoding for the output if serialised by the included utility
 
 ## Not enabled by default are
 
@@ -27,13 +29,9 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 
 As these currently consume excessive memory or have not been sufficiently tested
 
-## TODO
+## Included command-line tool
 
-* Tidy-up logging to console, controlled by a verbosity option
-
-## Included command-line tools
-
-* `openapi_optimise` applies all default optimisations
+* `openapi_optimise` applies all safe optimisations by default
 
 ````
 openapi_optimise {infile} [{outfile}]
@@ -46,6 +44,8 @@ Options:
   -d, --deindent    no indentation/linefeeds                           [boolean]
   -y, --yaml        read and write specification in yaml format (default JSON)
                                                                        [boolean]
-  -i, --yamlinput   read specification in yaml format                  [boolean]
-  -o, --yamloutput  write specification in yaml format                 [boolean]
+  -j, --jsyaml         use jsyaml for output, default jgexml           [boolean]
+  -t, --preserve-tags  preserve tags with vendor extensions            [boolean]
+  -r, --yamlread    read specification in yaml format                  [boolean]
+  -w, --yamlwrite   write specification in yaml format                 [boolean]
 ````

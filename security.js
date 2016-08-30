@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var common = require('./common.js');
 
+var logger;
+
 function gatherSecurity(src) {
 	var security = _.cloneDeep(src.securityDefinitions);
 	for (var s in security) {
@@ -13,10 +15,12 @@ module.exports = {
 
 	optimise : function(src,options) {
 
+		logger = common.logger(options.verbose);
+
 		var state = {};
 		state.security = gatherSecurity(src);
 		if (Object.keys(state.security).length>0) {
-			console.log('Optimising security definitions');
+			logger.log('Optimising security definitions');
 		}
 
 		if (src.security) {

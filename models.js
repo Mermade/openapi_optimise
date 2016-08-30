@@ -10,6 +10,7 @@ var deref = require('./schema_deref.js');
 var jptr = require('jgexml/jpath.js');
 
 var MIN_LENGTH = '{"$ref": "#/definitions/m"},{"m": {'.length;
+var logger;
 
 function sha1(s) {
 	var shasum = crypto.createHash('sha1');
@@ -146,7 +147,7 @@ function deepCompare(state) {
 					var reset = compare;
 					while ((reset<state.models.length) && (state.models[reset].length == state.models[index].length)) {
 						if (state.models[reset].hash == state.models[compare].hash) {
-							console.log('  Equivalent '+state.models[reset].hash+' and '+state.models[index].hash);
+							logger.log('  Equivalent '+state.models[reset].hash+' and '+state.models[index].hash);
 							state.models[reset].hash = state.models[index].hash;
 						}
 						reset++;
@@ -161,7 +162,7 @@ function deepCompare(state) {
 
 function matchModels(state) {
 	var percent = -1;
-	console.log('Matching models');
+	logger.log('Matching models');
 
 	var mIndex = 0;
 	while (mIndex<state.models.length-2) {
@@ -171,7 +172,7 @@ function matchModels(state) {
 		// TODO check for off-by-one errors
 		while (compare && (model.length==compare.length) && (model.hash==compare.hash)) {
 
-			//console.log('Match '+model.hash+' '+model.length+' '+model.path);
+			//logger.log('Match '+model.hash+' '+model.length+' '+model.path);
 
 			var matchLocn = -1;
 			for (var h=state.matches.length-1;h>=0;h--) {
@@ -216,13 +217,14 @@ function matchModels(state) {
 
 	}
 
-	console.log('\r100%');
+	logger.log('\r100%');
 }
 
 module.exports = {
 
 	optimise : function(src,options) {
 
+		logger = common.logger(options.verbose);
 		var state = {};
 
 		// we could always expand all existing $ref's here, but it is unlikely we would do a better job of renaming them all
@@ -250,10 +252,10 @@ module.exports = {
 				state.definitions.push(entry);
 			}
 
-			console.log('Extracting models');
+			logger.log('Extracting models');
 			state.models = extractModels(state,src);
 
-			console.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
+			logger.log('Sorting models ('+state.models.length+')'); // in reverse size, then hash order
 			state.models = state.models.sort(function(a,b){
 				if (a.length<b.length) return +1; // reverse
 				if (a.length>b.length) return -1; // reverse
@@ -268,13 +270,13 @@ module.exports = {
 				deepCompare(state);
 				matchModels(state);
 
-				console.log('Processing matches');
+				logger.log('Processing matches');
 				for (var h in state.matches) {
 					var match = state.matches[h];
 					var newName = getBestName(state,match);
 
-					//console.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
-					if (options.verbose>1) console.log(JSON.stringify(match.model.definition));
+					//logger.log('  Match '+match.model.hash+' '+match.model.length+' * '+match.locations.length+' => '+newName);
+					logger.info(JSON.stringify(match.model.definition));
 
 					var stillThere = jptr.jptr(src,match.locations[0].path);
 
@@ -286,9 +288,7 @@ module.exports = {
 
 					for (var l=match.locations.length-1;l>=stop;l--) {
 						var location = match.locations[l];
-						if (options.verbose>1) {
-							console.log('  @ '+location.path);
-						}
+						logger.info('  @ '+location.path);
 
 						// this is where the matching model is actually replaced by its $ref
 						var newDef = {};
@@ -305,11 +305,11 @@ module.exports = {
 				}
 			}
 			if (state.depth==0) {
-				console.log('Removing unused definitions');
+				logger.log('Removing unused definitions');
 				for (var d in state.definitions) {
 					var def = state.definitions[d];
 					if (def.seen<=0) {
-						console.log('  #/definition/'+def.name);
+						logger.log('  #/definition/'+def.name);
 						delete src.definitions[def.name];
 					}
 				}

@@ -1,21 +1,24 @@
 var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 
+var logger;
+
 function dump(defs,title) {
-	if (defs.length>0) console.log(title);
+	if (defs.length>0) logger.log(title);
 	for (var d in defs) {
 		var def = defs[d];
-		console.log(def.ref+' '+def.seen+' '+def.children.length);
+		logger.log(def.ref+' '+def.seen+' '+def.children.length);
 		for (var c in def.children) {
-			console.log('  '+def.children[c].ref);
+			logger.log('  '+def.children[c].ref);
 		}
 	}
 }
 
-function topoSort(src) {
+function topoSort(src,options) {
 	// https://en.wikipedia.org/wiki/Topological_sorting
 
 	var defs = [];
+	logger = common.logger(options.verbose);
 
 	common.recurse(src,{},function(obj,state){
 		if (state.key == '$ref') {
@@ -40,8 +43,6 @@ function topoSort(src) {
 
 			var ref = obj;
 			var restart = jptr.jptr(src,ref);
-
-			//console.log(ref+' '+JSON.stringify(restart));
 
 			var parent = state.parents[state.parents.length-1];
 			var newState = {};
@@ -70,8 +71,6 @@ function topoSort(src) {
 		}
 	});
 
-	//dump(defs,' one');
-
 	var changes = 1;
 	while (changes>0) {
 		changes = 0;
@@ -95,10 +94,9 @@ function topoSort(src) {
 			}
 		}
 
-		//dump(defs,' subsequent');
 	}
 
-	dump(defs,'Circular refs:');
+	dump(defs,'Circular refs:',logger);
 	return defs;
 }
 

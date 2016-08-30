@@ -1,5 +1,6 @@
 var common = require('./common.js');
 
+var logger;
 var state = {};
 state.responses = [];
 
@@ -24,14 +25,15 @@ function gatherResponses(src) {
 }
 
 module.exports = {
-	optimise : function(src) {
+	optimise : function(src,options) {
+		logger = common.logger(options.verbose);
 		if (src.responses) {
-			console.log('Removing unused responses');
+			logger.log('Removing unused responses');
 			state.responses = gatherResponses(src);
 			for (var t in state.responses) {
 				var response = state.responses[t];
 				if (response.seen<=0) {
-					console.log('  Deleting '+response.definition.name);
+					logger.log('  Deleting '+response.definition.name);
 					src.responses.splice(t,1);
 				}
 			}

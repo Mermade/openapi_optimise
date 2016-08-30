@@ -10,10 +10,13 @@ var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 var circular = require('./circular.js');
 
+var logger;
+
 module.exports = {
 
 	expand : function(src,options) {
 
+		logger = common.logger(options.verbose);
 		var circles = circular.getCircularRefs(src);
 
 		var lib = _.cloneDeep(src);
@@ -26,7 +29,7 @@ module.exports = {
 				var child = circle.children[cc];
 				var ref = child.ref.replace('#/definitions/','');
 				if ((lib.definitions[ref]) && (!src.definitions[ref])) {
-					console.log('Circular reference '+child.ref+ '-> '+circle.ref);
+					logger.log('Circular reference '+child.ref+ '-> '+circle.ref);
 					src.definitions[ref] = lib.definitions[ref];
 				}
 			}
@@ -39,10 +42,8 @@ module.exports = {
 			common.recurse(lib.definitions,{},function(obj,state){
 				if (state.key == '$ref') {
 					var reference = obj;
-					//console.log(reference);
 					if (!circular.isCircular(circles,reference)) {
 						var result = jptr.jptr(lib,reference);
-						//console.log(result);
 						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
 						changes++;
 					}

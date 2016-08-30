@@ -47,7 +47,7 @@ var argv = require('yargs')
 	.argv;
 
 if (argv.show) {
-	console.log(JSON.stringify(argv,null,2));
+	logger.log(JSON.stringify(argv,null,2));
 	process.exit();
 }
 
@@ -91,5 +91,5 @@ if (outfile) {
 	fs.writeFileSync(outfile,outStr,'utf8');
 }
 else {
-	console.log(outStr);
+	logger.log(outStr);
 }

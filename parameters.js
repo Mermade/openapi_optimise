@@ -4,6 +4,7 @@ var common = require('./common.js');
 var _ = require('lodash');
 
 var state = {};
+var logger;
 
 function transform(param) {
 	newParam = _.cloneDeep(param);
@@ -61,9 +62,7 @@ function store(state,param,name,p,action,pa,level) {
 		for (var e in state.cache) {
 			var entry = state.cache[e];
 			if (_.isEqual(entry.definition,newp)) {
-				if (state.options.v>=2) {
-					console.log('Info: Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
-				}
+				logger.info('Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
 				var location = {};
 				location.name = name;
 				location.path = p;
@@ -75,9 +74,9 @@ function store(state,param,name,p,action,pa,level) {
 				found = true;
 			}
 			else if (_.isMatch(entry.definition,param)) {
-				console.log('Info: parameter subset detected');
-				console.log('  '+entry.name+ ' @ '+entry.locations[0].action+' '+entry.locations[0].path);
-				console.log('  '+name+' @ '+action+' '+p);
+				logger.info('Parameter subset detected');
+				logger.info('  '+entry.name+ ' @ '+entry.locations[0].action+' '+entry.locations[0].path);
+				logger.info('  '+name+' @ '+action+' '+p);
 			}
 		}
 		if (!found) {
@@ -102,6 +101,8 @@ function store(state,param,name,p,action,pa,level) {
 module.exports = {
 
 	optimise : function(src,options) {
+
+		logger = common.logger(options.verbose);
 
 		state.options = options;
 		state.cache = [];
@@ -148,10 +149,10 @@ module.exports = {
 					}
 				}
 				src.parameters[newName] = entry.definition; // will apply transforms
-				console.log('The following parameters can be merged into #/parameters/'+newName);
+				logger.log('The following parameters can be merged into #/parameters/'+newName);
 				for (var l in entry.locations) {
 					var location = entry.locations[l];
-					console.log('  '+entry.definition.name+' @ '+location.action+' '+location.path);
+					logger.log('  '+entry.definition.name+' @ '+location.action+' '+location.path);
 					if (location.action != 'all') {
 						if (entry.locations[0].level == 1) {
 							// redundant duplication (override with no differences) of path-level parameter
@@ -167,7 +168,7 @@ module.exports = {
 			}
 		}
 
-		console.log('Promoting common required parameters to path-level');
+		logger.log('Promoting common required parameters to path-level');
 		common.forEachPath(src,function(path,jptr,name){
 			var spath = _.find(state.paths,function(o) { return o.path == name});
 			if (spath.operations>1) {
@@ -184,7 +185,7 @@ module.exports = {
 			}
 		});
 
-		console.log('Renaming duplicated common parameters');
+		logger.log('Renaming duplicated common parameters');
 		for (var p in src.paths) {
 			var path = src.paths[p];
 			for (var a in common.actions) {
@@ -224,11 +225,11 @@ module.exports = {
 			}
 		}
 
-		console.log('Checking common parameters are used');
+		logger.log('Checking common parameters are used');
 		for (var p in state.cache) {
 			var entry = state.cache[p];
 			if ((entry.locations[0].level==0) && (!entry.seen)) {
-				console.log('  Deleting '+entry.name);
+				logger.log('  Deleting '+entry.name);
 				delete src.parameters[entry.name];
 			}
 		}
