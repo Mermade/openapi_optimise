@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var common = require('./common.js');
 
 var logger;
@@ -22,6 +23,7 @@ function gatherResponses(src) {
 			}
 		}
 	});
+	return state.responses;
 }
 
 module.exports = {
@@ -34,7 +36,9 @@ module.exports = {
 				var response = state.responses[t];
 				if (response.seen<=0) {
 					logger.log('  Deleting '+response.definition.name);
-					src.responses.splice(t,1);
+					_.remove(src.responses,function(o){
+						return (o.name == response.name);
+					});
 				}
 			}
 			common.clean(src,'responses');

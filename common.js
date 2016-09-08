@@ -22,6 +22,8 @@ e4.properties = {};
 e4.additionalProperties = true;
 empty.push(e4);
 
+var commonLogger;
+
 /* state object contains
 * options (input)
 * parents,keys,paths (output)
@@ -87,6 +89,7 @@ function logger(verbosity) {
 	this.debug = function(s) {
 		if (this.verbosity>2) console.log(s);
 	};
+	commonLogger = this;
 }
 
 module.exports = {
@@ -95,7 +98,7 @@ module.exports = {
 
 	clean : function(parent,name) {
 		if ((parent[name]) && (Object.keys(parent[name]).length<=0)) {
-			logger.log('No '+name+' required');
+			commonLogger.log('No '+name+' required');
 			delete parent[name];
 		}
 	},

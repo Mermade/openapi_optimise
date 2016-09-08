@@ -144,9 +144,9 @@ module.exports = {
 				var newName = entry.name;
 				if (entry.locations[0].level==2) {
 					newName = uniq(src.parameters,entry.definition.name);
-					if (!src.parameters) {
-						src.parameters = {};
-					}
+				}
+				if (!src.parameters) {
+					src.parameters = {};
 				}
 				src.parameters[newName] = entry.definition; // will apply transforms
 				logger.log('The following parameters can be merged into #/parameters/'+newName);
