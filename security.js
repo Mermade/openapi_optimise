@@ -6,7 +6,7 @@ var logger;
 function gatherSecurity(src) {
 	var security = _.cloneDeep(src.securityDefinitions);
 	for (var s in security) {
-	  security[s].seen = 0;
+		security[s].seen = 0;
 	}
 	return security;
 }
@@ -19,7 +19,7 @@ module.exports = {
 
 		var state = {};
 		state.security = gatherSecurity(src);
-		if (Object.keys(state.security).length>0) {
+		if (state.security && (Object.keys(state.security).length>0)) {
 			logger.log('Optimising security definitions');
 		}
 

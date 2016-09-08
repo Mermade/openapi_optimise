@@ -4,8 +4,9 @@ var path = require('path');
 var yaml = require('js-yaml');
 var j2y = require('jgexml/json2yaml.js');
 
+var common = require('./common.js');
 var opt = require('./index.js');
-var deref = require('./schema_deref.js')
+var deref = require('./schema_deref.js');
 
 var argv = require('yargs')
 	.usage('openapi_optimise {infile} [{outfile}]')
@@ -46,8 +47,10 @@ var argv = require('yargs')
     .alias('h', 'help')
 	.argv;
 
+var logger = common.logger(argv.verbose);
+
 if (argv.show) {
-	logger.log(JSON.stringify(argv,null,2));
+	logger.write(JSON.stringify(argv,null,2));
 	process.exit();
 }
 
@@ -91,5 +94,5 @@ if (outfile) {
 	fs.writeFileSync(outfile,outStr,'utf8');
 }
 else {
-	logger.log(outStr);
+	logger.write(outStr);
 }

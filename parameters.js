@@ -50,7 +50,7 @@ function store(state,param,name,p,action,pa,level) {
 			var cp = state.cache[c];
 			for (var l in cp.locations) {
 				var locn = cp.locations[l];
-				if ((locn.level==0) && (cp.name == refName)) {
+				if ((locn.level === 0) && (cp.name == refName)) {
 					cp.seen = true;
 				}
 			}
@@ -170,7 +170,7 @@ module.exports = {
 
 		logger.log('Promoting common required parameters to path-level');
 		common.forEachPath(src,function(path,jptr,name){
-			var spath = _.find(state.paths,function(o) { return o.path == name});
+			var spath = _.find(state.paths,function(o) { return o.path == name; });
 			if (spath.operations>1) {
 				for (var e in state.cache) {
 					var entry = state.cache[e];
@@ -207,7 +207,7 @@ module.exports = {
 								else {
 									for (var l in entry.locations) {
 										var locn = entry.locations[l];
-										if ((locn.level == 0) && (locn.name == refName)) {
+										if ((locn.level === 0) && (locn.name == refName)) {
 											matchName = entry.name; // not locn.name
 											break;
 										}
@@ -228,7 +228,7 @@ module.exports = {
 		logger.log('Checking common parameters are used');
 		for (var p in state.cache) {
 			var entry = state.cache[p];
-			if ((entry.locations[0].level==0) && (!entry.seen)) {
+			if ((entry.locations[0].level === 0) && (!entry.seen)) {
 				logger.log('  Deleting '+entry.name);
 				delete src.parameters[entry.name];
 			}

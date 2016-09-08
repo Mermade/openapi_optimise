@@ -35,8 +35,8 @@ function analyse(gState,definition,models,base,key) {
 		model.path = state.path; //path+'/'+key;
 		var json = JSON.stringify(obj);
 		model.parent = state.parents[state.parents.length-1]; // a direct object reference is smaller than storing the another JSON pointer etc
-		if ((json.length >= MIN_LENGTH) && (model.definition.type) //) {
-			&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
+		if ((json.length >= MIN_LENGTH) && (model.definition.type) ) {
+			//&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
 			model.hash = sha1(json);
 			model.length = json.length;
 			models.push(model);
@@ -58,7 +58,7 @@ function analyse(gState,definition,models,base,key) {
 function extractModels(state,src,depth) {
 	var models = [];
 
-	if ((state.depth==0) && (src.definitions)) {
+	if ((state.depth === 0) && (src.definitions)) {
 		for (var d in src.definitions) {
 			var definition = src.definitions[d];
 			if (!definition["$ref"]) {
@@ -67,12 +67,23 @@ function extractModels(state,src,depth) {
 		}
 	}
 
+	common.forEachPath(src,function(path,pptr,name){
+
+		for (var p in path.parameters) {
+			var param = path.parameters[p];
+			if (param.schema) {
+				analyse(state,param.schema,pptr+'/parameters/',p);
+			}
+		}
+
+	});
+
 	common.forEachAction(src,function(action,aptr,name){
 
 		for (var p in action.parameters) {
 			var param = action.parameters[p];
 			if ((param.schema)) {//&& (!param.schema["$ref"])) {
-				var pptr = aptr + '/';
+				var pptr = aptr + '/parameters/';
 				analyse(state,param.schema,models,pptr,p);
 			}
 		}
@@ -80,7 +91,7 @@ function extractModels(state,src,depth) {
 		for (var r in action.responses) {
 			var response = action.responses[r];
 			if (response.schema) {//&& (!response.schema["$ref"])) {
-				var rptr = aptr + '/';
+				var rptr = aptr + '/responses/';
 				analyse(state,response,models,rptr,r);
 			}
 		}
@@ -303,7 +314,7 @@ module.exports = {
 					}
 				}
 			}
-			if (state.depth==0) {
+			if (state.depth === 0) {
 				logger.log('Removing unused definitions');
 				for (var d in state.definitions) {
 					var def = state.definitions[d];

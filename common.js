@@ -28,7 +28,7 @@ empty.push(e4);
 *
 * Initially you can pass in an empty object as the state or;
 * You can pass in a key and path if you are starting the descent not at the root of
-* ano object, but wish the returned paths to be relative to the root
+* an object, but wish the returned paths to be relative to the root. depth is always relative
 */
 function recurse(obj,state,callback) {
 
@@ -36,7 +36,7 @@ function recurse(obj,state,callback) {
 		state.parents = [];
 		state.depth = 0;
 	}
-	var first = ((typeof state.depth == 'undefined') || (state.depth == 0)); //_.isEqual(state.parents,[]);
+	var first = ((typeof state.depth == 'undefined') || (state.depth === 0)); //_.isEqual(state.parents,[]);
 	if (!state.keys) {
 		state.keys = [];
 		state.keys.push(state.key ? state.key : state.key = '');
@@ -75,15 +75,18 @@ function recurse(obj,state,callback) {
 
 function logger(verbosity) {
 	this.verbosity = verbosity;
+	this.write = function(s) {
+		console.log(s);
+	}
 	this.log = function(s) {
 		if (this.verbosity>0) console.log(s);
-	}
+	};
 	this.info = function(s) {
 		if (this.verbosity>1) console.log(s);
-	}
+	};
 	this.debug = function(s) {
 		if (this.verbosity>2) console.log(s);
-	}
+	};
 }
 
 module.exports = {
@@ -121,7 +124,7 @@ module.exports = {
 			for (var a in actions) {
 				if (path[actions[a]]) {
 					var aptr = '#/'+jptr.jpescape(p)+'/'+actions[a];
-					callback(path[actions[a]],aptr,actions[a]);
+					callback(path[actions[a]],aptr,actions[a],path);
 				}
 			}
 		}

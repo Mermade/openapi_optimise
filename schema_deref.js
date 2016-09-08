@@ -69,6 +69,22 @@ module.exports = {
 			});
 		}
 
+		// like object.assign but for arrays
+		common.forEachAction(src,function(action,ptr,index,path){
+			if ((path.parameters) && (action.parameters)) {
+				action.parameters = _.unionWith(path.parameters,action.parameters,function(a,b){
+					if (a.name>b.name) return +1;
+					if (a.name<b.name) return -1;
+					if (a["in"]>b["in"]) return +1;
+					if (a["in"]<b["in"]) return -1;
+					return 0;
+				});
+			}
+		});
+		common.forEachPath(src,function(path){
+			if (path.parameters) delete path.parameters;
+		});
+
 		common.clean(src,'definitions');
 
 		return src;
