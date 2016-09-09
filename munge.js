@@ -34,10 +34,15 @@ module.exports = {
 		common.forEachAction(src,function(action){
 			for (var p in action.parameters) {
 				var param = action.parameters[p];
+
 				if (typeof param.required === 'undefined') param.required = false;
 				var required = param.required;
 				delete param.required;
 				param.required = required;
+
+				if ((typeof param.minLength == 'number') && (param.minLength == 0)) {
+					delete param.minLength;
+				}
 			}
 		});
 
