@@ -39,13 +39,29 @@ module.exports = {
 		var changes = 1;
 		while (changes>=1) {
 			changes = 0;
-			common.recurse(lib.definitions,{},function(obj,state){
+			var iState = {};
+			iState.path = '#/definitions';
+			common.recurse(lib.definitions,iState,function(obj,state){
 				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
+					var hmm = (state.path.startsWith(reference+'/'));
 					if (!circular.isCircular(circles,reference)) {
-						var result = jptr.jptr(lib,reference);
-						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
-						changes++;
+						if (hmm) {
+							console.log('@: '+state.path);
+							console.log('$: '+reference);
+						}
+						else {
+							var result = jptr.jptr(lib,reference);
+							try {
+								//var resultStr = JSON.stringify(result);
+								//state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = _.cloneDeep(result);
+								state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+								changes++;
+							}
+							catch (ex) {
+								console.log('Unhandled circular reference @ '+state.path);
+							}
+						}
 					}
 				}
 			});
@@ -59,6 +75,7 @@ module.exports = {
 			common.recurse(src,{},function(obj,state){
 				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
+					//console.log('two: '+reference);
 
 					if (!circular.isCircular(circles,reference)) {
 						var result = _.cloneDeep(jptr.jptr(lib,reference));

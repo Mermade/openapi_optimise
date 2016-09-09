@@ -13,13 +13,25 @@ var normal = '\x1b[0m';
 
 var pass = 0;
 var fail = 0;
-
-// https://raw.githubusercontent.com/APIs-guru/openapi-directory/master/APIs/botify.com/1.0.0/swagger.yaml
+var pending = 0;
 
 function check(file) {
 	var components = file.split('\\');
+
 	if (components[components.length-1] == 'swagger.yaml') {
 		console.log(file);
+
+		// blacklist
+		for (var c in components) {
+			var comp = components[c];
+			if ((comp.startsWith('arm-network')) || (comp.startsWith('arm-machinelearning-webservices')) ||
+				(comp.startsWith('dataflow')) || (comp.startsWith('datastore'))) {
+				console.log(red+'  Blacklisted'+normal);
+				pending++;
+				return false;
+			}
+		}
+
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		src = yaml.safeLoad(srcStr);
 
@@ -43,7 +55,7 @@ function check(file) {
 	}
 }
 
-var pathspec = '../openapi-directory/APIs';
+var pathspec = (process.argv.length>2 ? process.argv[2] : '../openapi-directory/APIs');
 
 rr(pathspec, function (err, files) {
 	for (var i in files) {
@@ -52,5 +64,5 @@ rr(pathspec, function (err, files) {
 });
 
 process.on('exit',function(code) {
-	console.log(pass+' passing, '+fail+' failing');
+	console.log(pass+' passing, '+fail+' failing, '+pending+' pending');
 });

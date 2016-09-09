@@ -23,6 +23,10 @@ function topoSort(src,options) {
 	common.recurse(src,{},function(obj,state){
 		if ((state.key == '$ref') && (typeof obj === 'string')) {
 
+			if (obj == state.path) {
+				logger.write('  Direct circular reference!');
+			}
+
 			var entry = {};
 			var found = false;
 			for (var d in defs) {

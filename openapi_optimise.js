@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 
+var _ = require('lodash');
 var yaml = require('js-yaml');
 var j2y = require('jgexml/json2yaml.js');
 
@@ -16,9 +17,9 @@ var argv = require('yargs')
 	.describe('nondefault','apply non-default operations')
 	.boolean('nondefault')
 	.describe('verbose','verbosity level, repeat for more logging')
-	.alias('d','deindent')
-	.boolean('deindent')
-	.describe('deindent','no indentation/linefeeds')
+	.alias('u','unindent')
+	.boolean('unindent')
+	.describe('unindent','no indentation/linefeeds')
 	.boolean('expand')
 	.alias('e','expand')
 	.describe('expand','expand all local $refs before any model compression')
@@ -43,8 +44,8 @@ var argv = require('yargs')
 	.boolean('yamlwrite')
 	.alias('w','yamlwrite')
 	.describe('yamlwrite','write specification in yaml format')
-	.boolean('show')
-	.alias('s','show')
+	.boolean('debug')
+	.alias('d','debug')
 	.demand(1)
 	.help('h')
     .alias('h', 'help')
@@ -68,7 +69,13 @@ else {
 	src = require(path.resolve(infile));
 }
 
-var dest = opt.defaultOptimisations(src,argv);
+var dest;
+if (argv["skip-defaults"]) {
+	dest = _.cloneDeep(src);
+}
+else {
+	dest = opt.defaultOptimisations(src,argv);
+}
 
 if ((argv.expand) && (!argv.nondefault)) {
 	dest = deref.expand(dest,argv);
@@ -89,7 +96,7 @@ if ((argv.yaml) || (argv.yamlwrite)) {
 	}
 }
 else {
-	var indent = (argv.deindent ? '' : '\t');
+	var indent = (argv.unindent ? '' : '\t');
 	outStr = JSON.stringify(dest,null,indent);
 }
 

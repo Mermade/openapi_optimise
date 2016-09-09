@@ -51,11 +51,24 @@ Options:
   -v, --verbose     verbosity level, repeat for more logging             [count]
   -n, --nondefault  apply non-default operations                       [boolean]
   -e, --expand      expand all local $refs before any model compression[boolean]
-  -d, --deindent    no indentation/linefeeds                           [boolean]
   -y, --yaml        read and write specification in yaml format (default JSON)
                                                                        [boolean]
   -j, --jsyaml         use jsyaml for output, default jgexml           [boolean]
   -t, --preserve-tags  preserve tags with vendor extensions            [boolean]
+  -u, --unindent    no indentation/linefeeds                           [boolean]
   -r, --yamlread    read specification in yaml format                  [boolean]
   -w, --yamlwrite   write specification in yaml format                 [boolean]
 ````
+
+## Tests
+
+To run a test-suite:
+
+````
+node testRunner {path-to-APIs}
+````
+
+The test harness currently expects files named `swagger.yaml` and has been tested against
+
+* [APIs.guru](https://github.com/APIs-guru/openapi-directory)
+
