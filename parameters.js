@@ -8,29 +8,31 @@ var logger;
 
 function transform(param) {
 	newParam = _.cloneDeep(param);
+	var numeric = ((newParam.type == 'integer') || (newParam.type == 'number'));
 	if ((newParam["in"] != 'path') && (newParam.required === false)) {
 		delete newParam.required;
 	}
 	if (newParam.allowEmptyValue === false) {
-		delete newParam.allowEmptyValue;
+		delete newParam.allowEmptyValue; // applies only to 'in' query or formdata parameters
 	}
 	if (newParam.collectionFormat == 'csv') {
 		delete newParam.collectionFormat;
 	}
-	if (newParam.exclusiveMaximum === false) {
-		delete newParam.exclusiveMaximum;
+	// TODO collectionFormat:multi applies only to 'in' query or formdata parameters
+	if ((newParam.exclusiveMaximum === false) || (!numeric)) {
+		delete newParam.exclusiveMaximum; // applies only to numeric types
 	}
-	if (newParam.exclusiveMinimum === false) {
-		delete newParam.exclusiveMinimum;
+	if ((newParam.exclusiveMinimum === false) || (!numeric)) {
+		delete newParam.exclusiveMinimum; // applies only to numeric types
 	}
-	if (newParam.minLength === 0) {
-		delete newParam.minLength;
+	if ((newParam.minLength === 0) || (newParam.type != 'string')) {
+		delete newParam.minLength; // applies only to string types
 	}
-	if (newParam.minItems === 0) {
-		delete newParam.minItems;
+	if ((newParam.minItems === 0) || (newParam.type != 'array')) {
+		delete newParam.minItems; // applies only to arrays
 	}
-	if (newParam.uniqueItems === false) {
-		delete newParam.uniqueItems;
+	if ((newParam.uniqueItems === false) || (newParam.type != 'array')){
+		delete newParam.uniqueItems; // applies only to arrays
 	}
 	return newParam;
 }

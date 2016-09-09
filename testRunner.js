@@ -8,6 +8,7 @@ var common = require('./common.js');
 var sd = require('./schema_deref.js')
 var empty = require('./empty.js');
 var tags = require('./tags.js');
+var security = require('./security.js');
 var munge = require('./munge.js');
 
 var red = '\x1b[31m';
@@ -44,6 +45,7 @@ function check(file) {
 		var exp = _.cloneDeep(src);
 		exp = empty.optimise(exp,{});
 		exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
+		exp = security.optimise(exp,{}); // as not a reversible operation
 		exp = sd.expand(exp,{}); // as not a reversible operation
 		exp = munge.munge(exp,{});  // (re)instates optional objects/arrays
 		var expStr = JSON.stringify(exp,null,2);
@@ -53,6 +55,7 @@ function check(file) {
 		defo = oao.defaultOptimisations(defo,{});
 		defo = empty.optimise(defo,{}); // as not a reversible operation
 		defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
+		defo = security.optimise(defo,{}); // as not a reversible operation
 		defo = sd.expand(defo,{});
 		defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
 		var defoStr = JSON.stringify(defo,null,2);
