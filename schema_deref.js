@@ -1,4 +1,4 @@
-/* swagger deref
+/** swagger deref
 * Used to pre-process specifications prior to shrinking (if required)
 * Also used by tests to validate shrunk specifications are functionally equivalent to originals
 *
@@ -40,7 +40,7 @@ module.exports = {
 		while (changes>=1) {
 			changes = 0;
 			common.recurse(lib.definitions,{},function(obj,state){
-				if (state.key == '$ref') {
+				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
 					if (!circular.isCircular(circles,reference)) {
 						var result = jptr.jptr(lib,reference);
@@ -57,7 +57,7 @@ module.exports = {
 			changes = 0;
 
 			common.recurse(src,{},function(obj,state){
-				if (state.key == '$ref') {
+				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
 
 					if (!circular.isCircular(circles,reference)) {

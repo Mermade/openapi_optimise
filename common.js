@@ -1,7 +1,8 @@
-/* common functions
+/** common functions
 *
 */
 
+var crypto = require('crypto');
 var _ = require('lodash');
 var jptr = require('jgexml/jpath');
 
@@ -135,6 +136,12 @@ module.exports = {
 
 	logger : function(verbosity) {
 		return new logger(verbosity);
+	},
+
+	sha1 : function(s) {
+		var shasum = crypto.createHash('sha1');
+		shasum.update(s);
+		return shasum.digest('hex');
 	}
 
 };

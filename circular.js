@@ -21,7 +21,7 @@ function topoSort(src,options) {
 	logger = common.logger(options.verbose);
 
 	common.recurse(src,{},function(obj,state){
-		if (state.key == '$ref') {
+		if ((state.key == '$ref') && (typeof obj === 'string')) {
 
 			var entry = {};
 			var found = false;
@@ -48,7 +48,7 @@ function topoSort(src,options) {
 			var newState = {};
 
 			common.recurse(restart,newState,function(obj,state) {
-				if (state.key == '$ref') {
+				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var child = {};
 					child.ref = obj;
 

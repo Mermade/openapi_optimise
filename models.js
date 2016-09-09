@@ -2,7 +2,6 @@
 * optimise schema objects (models) within openapi / swagger specifications
 */
 
-var crypto = require('crypto');
 var _ = require('lodash');
 var common = require('./common.js');
 var deref = require('./schema_deref.js');
@@ -10,12 +9,6 @@ var jptr = require('jgexml/jpath.js');
 
 var MIN_LENGTH = '{"$ref": "#/definitions/m"},{"m": {}'.length;
 var logger;
-
-function sha1(s) {
-	var shasum = crypto.createHash('sha1');
-	shasum.update(s);
-	return shasum.digest('hex');
-}
 
 function analyse(gState,definition,models,base,key) {
 	var state = {};
@@ -37,7 +30,7 @@ function analyse(gState,definition,models,base,key) {
 		model.parent = state.parents[state.parents.length-1]; // a direct object reference is smaller than storing the another JSON pointer etc
 		if ((json.length >= MIN_LENGTH) && (model.definition.type) ) {
 			//&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
-			model.hash = sha1(json);
+			model.hash = common.sha1(json);
 			model.length = json.length;
 			models.push(model);
 		}
