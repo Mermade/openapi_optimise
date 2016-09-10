@@ -45,8 +45,9 @@ function check(file) {
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		src = yaml.safeLoad(srcStr);
 
-		SwaggerParser.validate(src, function(err, api) {
-			if (api) console.log("API name: %s, Version: %s", api.info.title, api.info.version);
+		var validator = new SwaggerParser();
+		validator.validate(src, function(err, api) {
+			if (validator.api) console.log("API name: %s, Version: %s", validator.api.info.title, validator.api.info.version);
 			if (err) {
 				console.log(err);
 				invalid++;
