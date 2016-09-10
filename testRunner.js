@@ -25,6 +25,7 @@ var argv = require('yargs')
 	.describe('validate','use swagger-parser to validate specs')
 	.help('h')
     .alias('h', 'help')
+	.strict()
 	.version(function() {
 		return require('../package.json').version;
 	  })
@@ -47,19 +48,16 @@ var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
 function processSpec(src){
 	var exp = _.cloneDeep(src);
-	exp = empty.optimise(exp,{});
+	exp = empty.optimise(exp,{}); // as not a reversible operation
 	exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
 	exp = security.optimise(exp,{}); // as not a reversible operation
-	exp = sd.expand(exp,{}); // as not a reversible operation
-	exp = munge.munge(exp,{});  // (re)instates optional objects/arrays
+	exp = sd.expand(exp,{});
+	exp = munge.munge(exp,{}); // (re)instates optional objects/arrays
 	var expStr = JSON.stringify(exp,null,2);
 	expSha1 = common.sha1(expStr);
 
 	var defo = _.cloneDeep(src);
-	defo = oao.defaultOptimisations(defo,{});
-	//defo = empty.optimise(defo,{}); // as not a reversible operation
-	//defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
-	//defo = security.optimise(defo,{}); // as not a reversible operation
+	defo = oao.defaultOptimisations(defo,{"preserveTags": true});
 	defo = sd.expand(defo,{});
 	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
