@@ -6,6 +6,7 @@ var prodcons = require('./prodcons.js');
 var definitions = require('./definitions.js');
 var security = require('./security.js');
 var empty = require('./empty.js');
+var actions = require('./actions.js');
 var models = require('./models.js');
 
 module.exports = {
@@ -14,6 +15,7 @@ module.exports = {
 		var opt = _.cloneDeep(swagger);
 
 		opt = empty.optimise(opt,options);
+		opt = actions.optimise(opt,options);
 		opt = parameters.optimise(opt,options);
 		opt = responses.optimise(opt,options);
 		opt = tags.optimise(opt,options);

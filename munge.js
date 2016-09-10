@@ -21,6 +21,7 @@ module.exports = {
 			if (!action.consumes) {
 				action.consumes = src.consumes;
 			}
+			var deprecated = (typeof action.deprecated == 'undefined' ? false : action.deprecated);
 
 			var produces = _.cloneDeep(action.produces);
 			var consumes = _.cloneDeep(action.consumes);
@@ -28,6 +29,8 @@ module.exports = {
 			delete action.consumes;
 			action.produces = produces;
 			action.consumes = consumes;
+			delete action.deprecated;
+			action.deprecated = deprecated;
 
 		});
 

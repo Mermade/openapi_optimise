@@ -57,9 +57,9 @@ function processSpec(src){
 
 	var defo = _.cloneDeep(src);
 	defo = oao.defaultOptimisations(defo,{});
-	defo = empty.optimise(defo,{}); // as not a reversible operation
-	defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
-	defo = security.optimise(defo,{}); // as not a reversible operation
+	//defo = empty.optimise(defo,{}); // as not a reversible operation
+	//defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
+	//defo = security.optimise(defo,{}); // as not a reversible operation
 	defo = sd.expand(defo,{});
 	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
