@@ -49,7 +49,9 @@ var argv = require('yargs')
 	.describe('yamlwrite','write specification in yaml format')
 	.boolean('debug')
 	.alias('d','debug')
+	.describe('debug','debug options')
 	.demand(1)
+	.strict()
 	.help('h')
     .alias('h', 'help')
 	.version(function() {
@@ -59,7 +61,7 @@ var argv = require('yargs')
 
 var logger = common.logger(argv.verbose);
 
-if (argv.show) {
+if (argv.debug) {
 	logger.write(JSON.stringify(argv,null,2));
 	process.exit();
 }
