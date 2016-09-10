@@ -14,6 +14,7 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Removing unused common parameters
 * Promotion of repeated mandatory action-level parameters to path-level
 * Removal of redundant parameter default properties
+* Removing empty parameter descriptions
 * Removing redundant consumes/produces
 * Compression of different representations of functionally equivalent empty schemas
 * Removing unused and empty tags

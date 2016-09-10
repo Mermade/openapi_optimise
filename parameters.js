@@ -9,6 +9,9 @@ var logger;
 function transform(param) {
 	newParam = _.cloneDeep(param);
 	var numeric = ((newParam.type == 'integer') || (newParam.type == 'number'));
+	if (newParam.description === '') {
+		delete newParam.description;
+	}
 	if ((newParam["in"] != 'path') && (newParam.required === false)) {
 		delete newParam.required;
 	}
