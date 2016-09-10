@@ -21,6 +21,8 @@ var argv = require('yargs')
 	.boolean('no-blacklist')
 	.alias('b','no-blacklist')
 	.describe('no-blacklist','turn off the blacklist')
+	.boolean('validate')
+	.describe('validate','use swagger-parser to validate specs')
 	.help('h')
     .alias('h', 'help')
 	.version(function() {
@@ -39,25 +41,50 @@ var fail = 0;
 var invalid = 0;
 var pending = 0;
 
+var blacklist = require(path.resolve('./blacklist.json'));
+
 var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
+function processSpec(src){
+	var exp = _.cloneDeep(src);
+	exp = empty.optimise(exp,{});
+	exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
+	exp = security.optimise(exp,{}); // as not a reversible operation
+	exp = sd.expand(exp,{}); // as not a reversible operation
+	exp = munge.munge(exp,{});  // (re)instates optional objects/arrays
+	var expStr = JSON.stringify(exp,null,2);
+	expSha1 = common.sha1(expStr);
+
+	var defo = _.cloneDeep(src);
+	defo = oao.defaultOptimisations(defo,{});
+	defo = empty.optimise(defo,{}); // as not a reversible operation
+	defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
+	defo = security.optimise(defo,{}); // as not a reversible operation
+	defo = sd.expand(defo,{});
+	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
+	var defoStr = JSON.stringify(defo,null,2);
+	defoSha1 = common.sha1(defoStr);
+
+	if (expSha1 == defoSha1) {
+		console.log(green+'  Matches when expanded'+normal);
+		pass++;
+	}
+	else {
+		console.log(red+'  Mismatch of expanded versions'+normal);
+		fail++;
+		if (argv.dump) {
+			fs.writeFileSync('./a.json',expStr,'utf8');
+			fs.writeFileSync('./b.json',defoStr,'utf8');
+		}
+	}
+}
+
 function check(file) {
+	var result = false;
 	var components = file.split('\\');
 
 	if ((components[components.length-1] == 'swagger.yaml') || (components[components.length-1] == 'swagger.json')) {
 		console.log(file);
-
-		if (!argv.noBlacklist) {
-			for (var c in components) {
-				var comp = components[c];
-				if ((comp.startsWith('arm-network')) || (comp.startsWith('arm-machinelearning-webservices')) ||
-					(comp.startsWith('dataflow')) || (comp.startsWith('datastore'))) {
-					console.log(red+'  Blacklisted'+normal);
-					pending++;
-					return false;
-				}
-			}
-		}
 
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		var src;
@@ -67,51 +94,38 @@ function check(file) {
 		else {
 			src = JSON.parse(srcStr);
 		}
+		console.log('  %s %s',src.info.title,src.info.version);
+		console.log('  %s',src.host);
 
-		var validator = new SwaggerParser();
-		validator.validate(_.cloneDeep(src), function(err, api) {
-			if (validator.api) console.log("API name: %s, Version: %s", validator.api.info.title, validator.api.info.version);
-			if (err) {
-				console.log(err);
-				invalid++;
+		if (!argv.noBlacklist) {
+			for (var b in blacklist) {
+				if ((src.info.title == blacklist[b].title) && (src.info.version === blacklist[b].version) &&
+					(src.host == blacklist[b].host)) {
+					console.log(red+'  Blacklisted'+normal);
+					pending++;
+					return false;
+				}
 			}
-			else {
-				var exp = _.cloneDeep(src);
-				exp = empty.optimise(exp,{});
-				exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
-				exp = security.optimise(exp,{}); // as not a reversible operation
-				exp = sd.expand(exp,{}); // as not a reversible operation
-				exp = munge.munge(exp,{});  // (re)instates optional objects/arrays
-				var expStr = JSON.stringify(exp,null,2);
-				expSha1 = common.sha1(expStr);
+		}
 
-				var defo = _.cloneDeep(src);
-				defo = oao.defaultOptimisations(defo,{});
-				defo = empty.optimise(defo,{}); // as not a reversible operation
-				defo = tags.optimise(defo,{"preserveTags": true}); // as not a reversible operation
-				defo = security.optimise(defo,{}); // as not a reversible operation
-				defo = sd.expand(defo,{});
-				defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
-				var defoStr = JSON.stringify(defo,null,2);
-				defoSha1 = common.sha1(defoStr);
-
-				if (expSha1 == defoSha1) {
-					console.log(green+'  Matches when expanded'+normal);
-					pass++;
+		if (argv.validate) {
+			var validator = new SwaggerParser();
+			validator.validate(_.cloneDeep(src), function(err, api) {
+				if (validator.api) console.log("API name: %s, Version: %s", validator.api.info.title, validator.api.info.version);
+				if (err) {
+					console.log(err);
+					invalid++;
 				}
 				else {
-					console.log(red+'  Mismatch of expanded versions'+normal);
-					fail++;
-					if (argv.dump) {
-						fs.writeFileSync('./a.json',expStr,'utf8');
-						fs.writeFileSync('./b.json',defoStr,'utf8');
-					}
+					result = processSpec(src);
 				}
-
-			}
-		});
-
+			});
+		}
+		else {
+			result = processSpec(src);
+		}
 	}
+	return result;
 }
 
 rr(pathspec, function (err, files) {
