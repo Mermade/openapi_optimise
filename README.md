@@ -1,5 +1,7 @@
 # openapi_optimise
 
+[![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
+
 A set of utility functions to optimise OpenApi (swagger) 2.0 specifications
 
 These optimisations may be most useful when the OpenApi specification has been converted from another format or
@@ -14,7 +16,7 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Removal of redundant parameter default properties
 * Removing redundant consumes/produces
 * Compression of different representations of functionally equivalent empty schemas
-* Removing unused and empty tags 
+* Removing unused and empty tags
 * Removing empty definitions
 * Removing empty responses
 * Removing unused securityDefinitions
@@ -47,17 +49,20 @@ var dest = opt.defaultOptimisations(swagger,options);
 openapi_optimise {infile} [{outfile}]
 
 Options:
-  -h, --help        Show help                                          [boolean]
-  -v, --verbose     verbosity level, repeat for more logging             [count]
-  -n, --nondefault  apply non-default operations                       [boolean]
-  -e, --expand      expand all local $refs before any model compression[boolean]
-  -y, --yaml        read and write specification in yaml format (default JSON)
+  -h, --help           Show help                                       [boolean]
+  -v, --verbose        verbosity level, repeat for more logging          [count]
+  -n, --nondefault     apply non-default operations                    [boolean]
+  -u, --unindent       no indentation/linefeeds                        [boolean]
+  -e, --expand         expand all local $refs before any model compression
                                                                        [boolean]
+  -i, --inline         inline $refs rather than moving to #/definitions[boolean]
   -j, --jsyaml         use jsyaml for output, default jgexml           [boolean]
+  -s, --skip-defaults  do not perform default optimisations            [boolean]
   -t, --preserve-tags  preserve tags with vendor extensions            [boolean]
-  -u, --unindent    no indentation/linefeeds                           [boolean]
-  -r, --yamlread    read specification in yaml format                  [boolean]
-  -w, --yamlwrite   write specification in yaml format                 [boolean]
+  -y, --yaml           read and write specification in yaml format (default
+                       JSON)                                           [boolean]
+  -r, --yamlread       read specification in yaml format               [boolean]
+  -w, --yamlwrite      write specification in yaml format              [boolean]
 ````
 
 ## Tests
