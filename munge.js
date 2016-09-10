@@ -43,6 +43,8 @@ module.exports = {
 				if ((typeof param.minLength == 'number') && (param.minLength == 0)) {
 					delete param.minLength;
 				}
+
+				if (param.description === '') delete param.description;
 			}
 		});
 
