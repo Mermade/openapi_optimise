@@ -11,6 +11,23 @@ var tags = require('./tags.js');
 var security = require('./security.js');
 var munge = require('./munge.js');
 
+var argv = require('yargs')
+	.usage('testRunner [options] [{path-to-specs}]')
+	.count('verbose')
+	.alias('v','verbose')
+	.boolean('dump')
+	.alias('d','dump')
+	.describe('dump','dump expanded specs to a.json and b.json')
+	.boolean('no-blacklist')
+	.alias('b','no-blacklist')
+	.describe('no-blacklist','turn off the blacklist')
+	.help('h')
+    .alias('h', 'help')
+	.version(function() {
+		return require('../package.json').version;
+	  })
+	.argv;
+
 var SwaggerParser = require('swagger-parser');
 
 var red = '\x1b[31m';
@@ -22,37 +39,37 @@ var fail = 0;
 var invalid = 0;
 var pending = 0;
 
-var pathspec = (process.argv.length>2 ? process.argv[2] : '../openapi-directory/APIs');
-var dump = (process.argv.length>3);
+var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
 function check(file) {
 	var components = file.split('\\');
 
-	if ((components[components.length-1] == 'swagger.yaml') || ((components[components.length-1] == 'swagger.json'))) {
+	if ((components[components.length-1] == 'swagger.yaml') || (components[components.length-1] == 'swagger.json')) {
 		console.log(file);
 
-		// blacklist
-		for (var c in components) {
-			var comp = components[c];
-			if ((comp.startsWith('arm-network')) || (comp.startsWith('arm-machinelearning-webservices')) ||
-				(comp.startsWith('dataflow')) || (comp.startsWith('datastore'))) {
-				console.log(red+'  Blacklisted'+normal);
-				pending++;
-				return false;
+		if (!argv.noBlacklist) {
+			for (var c in components) {
+				var comp = components[c];
+				if ((comp.startsWith('arm-network')) || (comp.startsWith('arm-machinelearning-webservices')) ||
+					(comp.startsWith('dataflow')) || (comp.startsWith('datastore'))) {
+					console.log(red+'  Blacklisted'+normal);
+					pending++;
+					return false;
+				}
 			}
 		}
 
+		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		var src;
 		if (components[components.length-1] == 'swagger.yaml') {
-			var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 			src = yaml.safeLoad(srcStr);
 		}
 		else {
-			src = require(path.resolve(file));
+			src = JSON.parse(srcStr);
 		}
 
 		var validator = new SwaggerParser();
-		validator.validate(src, function(err, api) {
+		validator.validate(_.cloneDeep(src), function(err, api) {
 			if (validator.api) console.log("API name: %s, Version: %s", validator.api.info.title, validator.api.info.version);
 			if (err) {
 				console.log(err);
@@ -85,7 +102,7 @@ function check(file) {
 				else {
 					console.log(red+'  Mismatch of expanded versions'+normal);
 					fail++;
-					if (dump) {
+					if (argv.dump) {
 						fs.writeFileSync('./a.json',expStr,'utf8');
 						fs.writeFileSync('./b.json',defoStr,'utf8');
 					}

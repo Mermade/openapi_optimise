@@ -10,7 +10,7 @@ var opt = require('./index.js');
 var deref = require('./schema_deref.js');
 
 var argv = require('yargs')
-	.usage('openapi_optimise {infile} [{outfile}]')
+	.usage('openapi_optimise {source} [{target}]')
 	.count('verbose')
 	.alias('v','verbose')
 	.alias('n','nondefault')
@@ -26,6 +26,9 @@ var argv = require('yargs')
 	.boolean('inline')
 	.alias('i','inline')
 	.describe('inline','inline $refs rather than moving to #/definitions')
+	.boolean('force')
+	.alias('f','force')
+	.describe('force','allow overwriting of source with target')
 	.boolean('jsyaml')
 	.alias('j','jsyaml')
 	.describe('jsyaml','use jsyaml for output, default jgexml')
@@ -49,6 +52,9 @@ var argv = require('yargs')
 	.demand(1)
 	.help('h')
     .alias('h', 'help')
+	.version(function() {
+		return require('../package.json').version;
+	  })
 	.argv;
 
 var logger = common.logger(argv.verbose);
@@ -59,6 +65,12 @@ if (argv.show) {
 }
 
 var infile = argv._[0];
+var outfile = (argv._.length>1 ? argv._[1] : '');
+
+if ((infile == outfile) && (!argv.force)) {
+	logger.write('source and target are same, use --force if sure');
+	process.exit(1);
+}
 
 var src;
 if ((argv.yaml) || (argv.yamlread)) {
@@ -83,8 +95,6 @@ if ((argv.expand) && (!argv.nondefault)) {
 if (argv.nondefault) {
 	dest = opt.nonDefaultOptimisations(dest,argv);
 }
-
-var outfile = (argv._.length>1 ? argv._[1] : '');
 
 var outStr;
 if ((argv.yaml) || (argv.yamlwrite)) {
