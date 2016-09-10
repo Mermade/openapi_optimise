@@ -28,7 +28,7 @@ var dump = (process.argv.length>3);
 function check(file) {
 	var components = file.split('\\');
 
-	if (components[components.length-1] == 'swagger.yaml') {
+	if ((components[components.length-1] == 'swagger.yaml') || ((components[components.length-1] == 'swagger.json'))) {
 		console.log(file);
 
 		// blacklist
@@ -42,8 +42,14 @@ function check(file) {
 			}
 		}
 
-		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
-		src = yaml.safeLoad(srcStr);
+		var src;
+		if (components[components.length-1] == 'swagger.yaml') {
+			var srcStr = fs.readFileSync(path.resolve(file),'utf8');
+			src = yaml.safeLoad(srcStr);
+		}
+		else {
+			src = require(path.resolve(file));
+		}
 
 		var validator = new SwaggerParser();
 		validator.validate(src, function(err, api) {
