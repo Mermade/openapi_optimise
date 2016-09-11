@@ -15,6 +15,7 @@ var argv = require('yargs')
 	.usage('testRunner [options] [{path-to-specs}]')
 	.count('verbose')
 	.alias('v','verbose')
+	.describe('verbose','increase verbosity')
 	.boolean('dump')
 	.alias('d','dump')
 	.describe('dump','dump expanded specs to a.json and b.json')
@@ -23,6 +24,9 @@ var argv = require('yargs')
 	.describe('no-blacklist','turn off the blacklist')
 	.boolean('validate')
 	.describe('validate','use swagger-parser to validate specs')
+	//.boolean('alternative')
+	//.describe('alternative','use alternative dereferencing algorithm')
+	//.alias('a','alternative')
 	.help('h')
     .alias('h', 'help')
 	.strict()
@@ -58,7 +62,14 @@ function processSpec(src){
 
 	var defo = _.cloneDeep(src);
 	defo = oao.defaultOptimisations(defo,{"preserveTags": true});
-	defo = sd.expand(defo,{});
+	//if (argv.alternative) {
+		// hmm, takes a callback
+		// could use async library:series http://stackoverflow.com/a/9884496/139404
+		//defo = SwaggerParser.dereference(defo, [options], [callback]);
+	//}
+	//else {
+		defo = sd.expand(defo,{});
+	//}
 	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
 	defoSha1 = common.sha1(defoStr);
