@@ -89,12 +89,9 @@ module.exports = {
 		// like object.assign but for arrays
 		common.forEachAction(src,function(action,ptr,index,path){
 			if ((path.parameters) && (action.parameters)) {
-				action.parameters = _.unionWith(path.parameters,action.parameters,function(a,b){
-					if (a.name>b.name) return +1;
-					if (a.name<b.name) return -1;
-					if (a["in"]>b["in"]) return +1;
-					if (a["in"]<b["in"]) return -1;
-					return 0;
+				logger.log('Merging path parameters to action: '+index+'@'+path);
+				action.parameters = _.unionWith(action.parameters,path.parameters,function(a,b){
+					return ((a.name == b.name) && (a["in"] == b["in"]));
 				});
 			}
 		});

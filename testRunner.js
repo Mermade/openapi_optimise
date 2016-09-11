@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var path = require('path');
 var rr = require('recursive-readdir');
@@ -5,7 +7,7 @@ var yaml = require('js-yaml');
 var _ = require('lodash');
 var oao = require('./index.js');
 var common = require('./common.js');
-var sd = require('./schema_deref.js')
+var sd = require('./schema_deref.js');
 var empty = require('./empty.js');
 var tags = require('./tags.js');
 var security = require('./security.js');
@@ -32,7 +34,7 @@ var argv = require('yargs')
 	.strict()
 	.version(function() {
 		return require('../package.json').version;
-	  })
+	})
 	.argv;
 
 var SwaggerParser = require('swagger-parser');
@@ -45,12 +47,14 @@ var pass = 0;
 var fail = 0;
 var invalid = 0;
 var pending = 0;
+var failures = [];
 
 var blacklist = require(path.resolve('./blacklist.json'));
 
 var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
 function processSpec(src){
+	var result = false;
 	var exp = _.cloneDeep(src);
 	exp = empty.optimise(exp,{}); // as not a reversible operation
 	exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
@@ -58,7 +62,7 @@ function processSpec(src){
 	exp = sd.expand(exp,{});
 	exp = munge.munge(exp,{}); // (re)instates optional objects/arrays
 	var expStr = JSON.stringify(exp,null,2);
-	expSha1 = common.sha1(expStr);
+	var expSha1 = common.sha1(expStr);
 
 	var defo = _.cloneDeep(src);
 	defo = oao.defaultOptimisations(defo,{"preserveTags": true});
@@ -72,11 +76,12 @@ function processSpec(src){
 	//}
 	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
-	defoSha1 = common.sha1(defoStr);
+	var defoSha1 = common.sha1(defoStr);
 
 	if (expSha1 == defoSha1) {
 		console.log(green+'  Matches when expanded'+normal);
 		pass++;
+		result = true;
 	}
 	else {
 		console.log(red+'  Mismatch of expanded versions'+normal);
@@ -86,10 +91,11 @@ function processSpec(src){
 			fs.writeFileSync('./b.json',defoStr,'utf8');
 		}
 	}
+	return result;
 }
 
 function check(file) {
-	var result = false;
+	var result = true;
 	var components = file.split('\\');
 
 	if ((components[components.length-1] == 'swagger.yaml') || (components[components.length-1] == 'swagger.json')) {
@@ -112,7 +118,7 @@ function check(file) {
 					(src.host == blacklist[b].host)) {
 					console.log(red+'  Blacklisted'+normal);
 					pending++;
-					return false;
+					return true; // so we don't lump in with the final failure list
 				}
 			}
 		}
@@ -139,10 +145,19 @@ function check(file) {
 
 rr(pathspec, function (err, files) {
 	for (var i in files) {
-		check(files[i]);
+		if (!check(files[i])) {
+			failures.push(files[i]);
+		}
 	}
 });
 
 process.on('exit',function(code) {
+	if (failures.length>0) {
+		console.log(red);
+		for (var f in failures) {
+			console.log(red+failures[f]);
+		}
+		console.log(normal);
+	}
 	console.log('Tests: %s passing, %s failing, %s invalid, %s pending',pass,fail,invalid,pending);
 });

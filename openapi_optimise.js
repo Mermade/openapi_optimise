@@ -1,3 +1,4 @@
+'use strict';
 var fs = require('fs');
 var path = require('path');
 
@@ -56,7 +57,7 @@ var argv = require('yargs')
     .alias('h', 'help')
 	.version(function() {
 		return require('../package.json').version;
-	  })
+	})
 	.argv;
 
 var logger = common.logger(argv.verbose);
@@ -69,7 +70,7 @@ if (argv.debug) {
 var infile = argv._[0];
 var outfile = (argv._.length>1 ? argv._[1] : '');
 
-if ((infile == outfile) && (!argv.force)) {
+if ((infile === outfile) && (!argv.force)) {
 	logger.write('source and target are same, use --force if sure');
 	process.exit(1);
 }
