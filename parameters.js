@@ -159,9 +159,9 @@ module.exports = {
 					var location = entry.locations[l];
 					logger.log('  '+entry.definition.name+' @ '+location.action+' '+location.path);
 					if (location.action != 'all') {
-						if (entry.locations[0].level == 1) {
+						if ((entry.locations[0].level == 1) && (entry.locations[0].path == location.path)) {
 							// redundant duplication (override with no differences) of path-level parameter
-							delete src.paths[location.path][location.action].parameters[location.index];
+							src.paths[location.path][location.action].parameters.splice(location.index,1);
 						}
 						else {
 							var newDef = {};
