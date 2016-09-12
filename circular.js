@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 
@@ -82,17 +83,18 @@ function topoSort(src,options) {
 			var def = defs[d];
 			if ((def.seen<=1) || (def.children.length<=0)) {
 
+				// remove all references to 'empty' this $ref as children
+
 				for (var dd in defs) {
 					var compare = defs[dd];
-					for (var c in compare.children) {
-						var child = compare.children[c];
-						if (child.ref == def.ref) {
-							compare.children.splice(c,1);
-							changes++;
-						}
-					}
+					_.remove(compare.children, function(c){
+						var result = (c.ref == def.ref);
+						if (result) changes++;
+						return result;
+					});
 				}
 
+				// remove the $ref itself
 				defs.splice(d,1);
 				changes++;
 			}
@@ -109,7 +111,6 @@ module.exports = {
 	getCircularRefs : topoSort,
 
 	isCircular : function (circles,ref) {
-		var result = false;
 		for (var c in circles) {
 			var circle = circles[c];
 			for (var cc in circle.children) {

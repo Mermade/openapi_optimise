@@ -23,19 +23,24 @@ module.exports = {
 		delete src.parameters;
 		src.definitions = {};
 
+		var skip = [];
 		for (var c in circles) {
 			var circle = circles[c];
 			for (var cc in circle.children) {
 				var child = circle.children[cc];
-				var ref = child.ref.replace('#/definitions/','');
-				if ((lib.definitions[ref]) && (!src.definitions[ref])) {
-					logger.log('Circular reference '+child.ref+ '-> '+circle.ref);
-					src.definitions[ref] = lib.definitions[ref];
+				if (circle.ref.startsWith('#/definitions')) {
+					var ref = child.ref.replace('#/definitions/','');
+					if ((lib.definitions[ref]) && (!src.definitions[ref])) {
+						logger.log('Reinstating circular reference '+circle.ref+ '-> '+child.ref);
+						src.definitions[ref] = lib.definitions[ref];
+						skip.push(child.ref);
+					}
 				}
 			}
 		}
 
 		// expand within definitions
+		logger.info('Phase 1');
 		var changes = 1;
 		while (changes>=1) {
 			changes = 0;
@@ -44,30 +49,17 @@ module.exports = {
 			common.recurse(lib.definitions,iState,function(obj,state){
 				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
-					var hmm = (state.path.startsWith(reference+'/'));
-					if (!circular.isCircular(circles,reference)) {
-						if (hmm) {
-							console.log('@: '+state.path);
-							console.log('$: '+reference);
-						}
-						else {
-							var result = jptr.jptr(lib,reference);
-							try {
-								//var resultStr = JSON.stringify(result);
-								//state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = _.cloneDeep(result);
-								state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
-								changes++;
-							}
-							catch (ex) {
-								console.log('Unhandled circular reference @ '+state.path);
-							}
-						}
+					if (skip.indexOf(reference)<0) {
+						var result = jptr.jptr(lib,reference);
+						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+						changes++;
 					}
 				}
 			});
 		}
 
 		// expand use of definitions
+		logger.info('Phase 2');
 		var changes = 1;
 		while (changes>=1) {
 			changes = 0;
@@ -77,8 +69,8 @@ module.exports = {
 					var reference = obj;
 					//console.log('two: '+reference);
 
-					if (!circular.isCircular(circles,reference)) {
-						var result = _.cloneDeep(jptr.jptr(lib,reference));
+					if (skip.indexOf(reference)<0) {
+						var result = jptr.jptr(lib,reference); //_.cloneDeep(
 						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
 						changes++;
 					}
