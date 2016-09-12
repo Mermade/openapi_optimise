@@ -2,9 +2,7 @@ var _ = require('lodash');
 var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 
-var logger;
-
-function dump(defs,title) {
+function dump(defs,title,logger) {
 	if (defs.length>0) logger.log(title);
 	for (var d in defs) {
 		var def = defs[d];
@@ -19,7 +17,7 @@ function topoSort(src,options) {
 	// https://en.wikipedia.org/wiki/Topological_sorting
 
 	var defs = [];
-	logger = common.logger(options.verbose);
+	var logger = common.logger(options.verbose);
 
 	common.recurse(src,{},function(obj,state){
 		if ((state.key == '$ref') && (typeof obj === 'string')) {
@@ -81,7 +79,7 @@ function topoSort(src,options) {
 		changes = 0;
 		for (var d in defs) {
 			var def = defs[d];
-			if ((def.seen<=1) || (def.children.length<=0)) {
+			if ((def.seen<=0) || (def.children.length<=0)) {
 
 				// remove all references to 'empty' this $ref as children
 
@@ -89,7 +87,10 @@ function topoSort(src,options) {
 					var compare = defs[dd];
 					_.remove(compare.children, function(c){
 						var result = (c.ref == def.ref);
-						if (result) changes++;
+						if (result) {
+							def.seen--;
+							changes++;
+						}
 						return result;
 					});
 				}

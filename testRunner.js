@@ -66,7 +66,6 @@ function processSpec(src){
 	exp = sd.expand(exp,options);
 	exp = munge.munge(exp,options); // (re)instates optional objects/arrays
 	var expStr = JSON.stringify(exp,null,2);
-	var expSha1 = common.sha1(expStr);
 
 	var defo = _.cloneDeep(src);
 	defo = oao.defaultOptimisations(defo,options);
@@ -80,9 +79,8 @@ function processSpec(src){
 	//}
 	defo = munge.munge(defo,options); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
-	var defoSha1 = common.sha1(defoStr);
 
-	if (expSha1 == defoSha1) {
+	if (_.isEqual(defo,exp)) {
 		console.log(green+'  Matches when expanded'+normal);
 		pass++;
 		result = true;

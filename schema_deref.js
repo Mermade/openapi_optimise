@@ -10,13 +10,11 @@ var jptr = require('jgexml/jpath.js');
 var common = require('./common.js');
 var circular = require('./circular.js');
 
-var logger;
-
 module.exports = {
 
 	expand : function(src,options) {
 
-		logger = common.logger(options.verbose);
+		var logger = common.logger(options.verbose);
 		var circles = circular.getCircularRefs(src,options);
 
 		var lib = _.cloneDeep(src);
@@ -31,7 +29,7 @@ module.exports = {
 				if (circle.ref.startsWith('#/definitions')) {
 					var ref = child.ref.replace('#/definitions/','');
 					if ((lib.definitions[ref]) && (!src.definitions[ref])) {
-						logger.log('Reinstating circular reference '+circle.ref+ '-> '+child.ref);
+						logger.log('Reinstating circular reference '+circle.ref+ ' -> '+child.ref);
 						src.definitions[ref] = lib.definitions[ref];
 						skip.push(child.ref);
 					}
@@ -50,7 +48,8 @@ module.exports = {
 				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
 					if (skip.indexOf(reference)<0) {
-						var result = jptr.jptr(lib,reference);
+						logger.debug(obj+' @ '+state.path);
+						var result = _.cloneDeep(jptr.jptr(lib,reference));
 						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
 						changes++;
 					}
@@ -67,7 +66,6 @@ module.exports = {
 			common.recurse(src,{},function(obj,state){
 				if ((state.key == '$ref') && (typeof obj === 'string')) {
 					var reference = obj;
-					//console.log('two: '+reference);
 
 					if (skip.indexOf(reference)<0) {
 						var result = jptr.jptr(lib,reference); //_.cloneDeep(
@@ -81,7 +79,7 @@ module.exports = {
 		// like object.assign but for arrays
 		common.forEachAction(src,function(action,ptr,index,path){
 			if ((path.parameters) && (action.parameters)) {
-				logger.log('Merging path parameters to action: '+index+'@'+path);
+				logger.log('Merging path-level parameters to action @ '+ptr);
 				action.parameters = _.unionWith(action.parameters,path.parameters,function(a,b){
 					return ((a.name == b.name) && (a["in"] == b["in"]));
 				});
