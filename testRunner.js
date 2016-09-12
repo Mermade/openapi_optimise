@@ -53,28 +53,32 @@ var blacklist = require(path.resolve('./blacklist.json'));
 
 var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
+var options = {};
+options.verbose = argv.verbose;
+options.preserveTags = true;
+
 function processSpec(src){
 	var result = false;
 	var exp = _.cloneDeep(src);
-	exp = empty.optimise(exp,{}); // as not a reversible operation
-	exp = tags.optimise(exp,{"preserveTags": true}); // as not a reversible operation
-	exp = security.optimise(exp,{}); // as not a reversible operation
-	exp = sd.expand(exp,{});
-	exp = munge.munge(exp,{}); // (re)instates optional objects/arrays
+	exp = empty.optimise(exp,options); // as not a reversible operation
+	exp = tags.optimise(exp,options); // as not a reversible operation
+	exp = security.optimise(exp,options); // as not a reversible operation
+	exp = sd.expand(exp,options);
+	exp = munge.munge(exp,options); // (re)instates optional objects/arrays
 	var expStr = JSON.stringify(exp,null,2);
 	var expSha1 = common.sha1(expStr);
 
 	var defo = _.cloneDeep(src);
-	defo = oao.defaultOptimisations(defo,{"preserveTags": true});
+	defo = oao.defaultOptimisations(defo,options);
 	//if (argv.alternative) {
 		// hmm, takes a callback
 		// could use async library:series http://stackoverflow.com/a/9884496/139404
 		//defo = SwaggerParser.dereference(defo, [options], [callback]);
 	//}
 	//else {
-		defo = sd.expand(defo,{});
+		defo = sd.expand(defo,options);
 	//}
-	defo = munge.munge(defo,{}); // (re)instates optional objects/arrays
+	defo = munge.munge(defo,options); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
 	var defoSha1 = common.sha1(defoStr);
 
