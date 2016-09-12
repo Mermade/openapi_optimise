@@ -5,6 +5,7 @@
 
 var _ = require('lodash');
 var common = require('./common.js');
+var parameters = require('./parameters.js');
 
 module.exports = {
 
@@ -34,20 +35,19 @@ module.exports = {
 
 		});
 
+		for (var p in src.parameters) {
+			src.parameters[p] = parameters.transform(src.parameters[p]);
+		}
+
+		common.forEachPath(src,function(path){
+			for (var p in path.parameters) {
+				path.parameters[p] = parameters.transform(path.parameters[p]);
+			}
+		});
+
 		common.forEachAction(src,function(action){
 			for (var p in action.parameters) {
-				var param = action.parameters[p];
-
-				if (typeof param.required === 'undefined') param.required = false;
-				var required = param.required;
-				delete param.required;
-				param.required = required;
-
-				if ((typeof param.minLength == 'number') && (param.minLength == 0)) {
-					delete param.minLength;
-				}
-
-				if (param.description === '') delete param.description;
+				action.parameters[p] = parameters.transform(action.parameters[p]);
 			}
 		});
 

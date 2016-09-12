@@ -5,7 +5,9 @@
 A set of utility functions to optimise OpenApi (swagger) 2.0 specifications
 
 These optimisations may be most useful when the OpenApi specification has been converted from another format or
-automatically generated, and may improve code-generation. Disk/over-the-wire savings of 25% *even after gzip compression* are easily possible.
+automatically generated, and may improve code-generation. Differencing the input and output may also identify
+errors in your specification not detected by most parsers/validators. Disk/over-the-wire savings of 25%
+*even after gzip compression* are easily possible.
 
 ## Default optimisations
 
@@ -14,6 +16,7 @@ automatically generated, and may improve code-generation. Disk/over-the-wire sav
 * Removing unused common parameters
 * Promotion of repeated mandatory action-level parameters to path-level
 * Removal of redundant parameter default properties
+* Removal of incorrect parameter type, property and format combinations
 * Removing empty parameter descriptions
 * Removing redundant consumes/produces
 * Compression of different representations of functionally equivalent empty schemas
