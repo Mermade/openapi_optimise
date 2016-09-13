@@ -118,7 +118,7 @@ function getBestName(state,match) {
 	var result = '';
 	for (var l=match.locations.length-1;l>=0;l--) { // in reverse order
 		var location = match.locations[l];
-		if (isNaN(parseInt(location.name,10))) {
+		if (isNaN(parseInt(location.name,10))) { // don't use result codes as model names
 			if ((location.name.length<result.length) || (!result)) {
 				result = location.name;
 			}
@@ -269,6 +269,17 @@ module.exports = {
 				return 0;
 			});
 
+			if (state.depth === 0) {
+				logger.log('Removing unused definitions');
+				for (var d in state.definitions) {
+					var def = state.definitions[d];
+					if (def.seen<=0) {
+						logger.log('  #/definition/'+def.name);
+						delete src.definitions[def.name];
+					}
+				}
+			}
+
 			if ((state.models.length>0) && (state.models.length!=oModels)) {
 				deepCompare(state);
 				matchModels(state);
@@ -305,16 +316,6 @@ module.exports = {
 						location.parent[location.name] = newDef;
 						changes++;
 						stillThere = jptr.jptr(src,match.locations[0].path);
-					}
-				}
-			}
-			if (state.depth === 0) {
-				logger.log('Removing unused definitions');
-				for (var d in state.definitions) {
-					var def = state.definitions[d];
-					if (def.seen<=0) {
-						logger.log('  #/definition/'+def.name);
-						delete src.definitions[def.name];
 					}
 				}
 			}

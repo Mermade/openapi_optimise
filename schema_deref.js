@@ -50,8 +50,13 @@ module.exports = {
 					if (skip.indexOf(reference)<0) {
 						logger.debug(obj+' @ '+state.path);
 						var result = _.cloneDeep(jptr.jptr(lib,reference));
-						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
-						changes++;
+						if (result) {
+							state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+							changes++;
+						}
+						else {
+							console.log('Definition not found: %s',reference);
+						}
 					}
 				}
 			});
@@ -69,8 +74,13 @@ module.exports = {
 
 					if (skip.indexOf(reference)<0) {
 						var result = jptr.jptr(lib,reference); //_.cloneDeep(
-						state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
-						changes++;
+						if (result) {
+							state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+							changes++;
+						}
+						else {
+							console.log('Reference not found:  %s',reference);
+						}
 					}
 				}
 			});
