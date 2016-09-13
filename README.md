@@ -17,6 +17,7 @@ errors in your specification not detected by most parsers/validators. Disk/over-
 * Promotion of repeated mandatory action-level parameters to path-level
 * Removal of redundant parameter default properties
 * Removal of incorrect parameter type, property and format combinations
+* Removal of redundant enums (from boolean types)
 * Removing empty parameter descriptions
 * Removing redundant consumes/produces
 * Compression of different representations of functionally equivalent empty schemas
@@ -57,6 +58,7 @@ Options:
   -v, --verbose        verbosity level, repeat for more logging          [count]
   -n, --nondefault     apply non-default operations                    [boolean]
   -u, --unindent       no indentation/linefeeds                        [boolean]
+  -a, --analyse        analyse structure of specification              [boolean]
   -e, --expand         expand all local $refs before any model compression
                                                                        [boolean]
   -i, --inline         inline $refs rather than moving to #/definitions[boolean]

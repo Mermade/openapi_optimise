@@ -45,9 +45,9 @@ var argv = require('yargs')
 
 var SwaggerParser = require('swagger-parser');
 
-var red = '\x1b[31m';
-var green = '\x1b[32m';
-var normal = '\x1b[0m';
+var red = process.env.NODE_DISABLE_COLORS ? '' : '\x1b[31m';
+var green = process.env.NODE_DISABLE_COLORS ? '' : '\x1b[32m';
+var normal = process.env.NODE_DISABLE_COLORS ? '' : '\x1b[0m';
 
 var pass = 0;
 var fail = 0;
@@ -166,7 +166,7 @@ process.on('exit',function(code) {
 		failures.sort();
 		console.log(red);
 		for (var f in failures) {
-			console.log(red+failures[f]);
+			console.log(failures[f]);
 		}
 		console.log(normal);
 	}
