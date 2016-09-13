@@ -9,6 +9,7 @@ var j2y = require('jgexml/json2yaml.js');
 var common = require('./common.js');
 var opt = require('./index.js');
 var deref = require('./schema_deref.js');
+var circular = require('./circular.js');
 
 var argv = require('yargs')
 	.usage('openapi_optimise {source} [{target}]')
@@ -21,6 +22,9 @@ var argv = require('yargs')
 	.alias('u','unindent')
 	.boolean('unindent')
 	.describe('unindent','no indentation/linefeeds')
+	.boolean('analyse')
+	.alias('a','analyse')
+	.describe('analyse','analyse structure of specification')
 	.boolean('expand')
 	.alias('e','expand')
 	.describe('expand','expand all local $refs before any model compression')
@@ -60,8 +64,12 @@ var argv = require('yargs')
 	})
 	.argv;
 
-var logger = common.logger(argv.verbose);
+var logger = new common.logger(argv.verbose);
 
+if (argv.analyse) {
+	if (argv.verbose<2) argv.verbose = 2;
+	argv.skipDefaults = true;
+}
 if (argv.debug) {
 	logger.write(JSON.stringify(argv,null,2));
 	process.exit();
@@ -85,8 +93,12 @@ else {
 }
 
 var dest;
-if (argv["skip-defaults"]) {
+if (argv.skipDefaults) {
 	dest = _.cloneDeep(src);
+	if (argv.analyse) {
+		var circles = circular.getCircularRefs(dest,argv);
+		console.log('Circular references %s',circles.length);
+	}
 }
 else {
 	dest = opt.defaultOptimisations(src,argv);
@@ -117,5 +129,5 @@ if (outfile) {
 	fs.writeFileSync(outfile,outStr,'utf8');
 }
 else {
-	logger.write(outStr);
+	if (!argv.analyse) logger.write(outStr);
 }
