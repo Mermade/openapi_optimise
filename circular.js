@@ -17,7 +17,7 @@ function topoSort(src,options) {
 	// https://en.wikipedia.org/wiki/Topological_sorting
 
 	var defs = [];
-	var logger = common.logger(options.verbose);
+	var logger = new common.logger(options.verbose);
 
 	common.recurse(src,{},function(obj,state){
 		if ((state.key == '$ref') && (typeof obj === 'string')) {

@@ -34,7 +34,7 @@ function gatherTags(src) {
 
 module.exports = {
 	optimise : function(src,options) {
-		logger = common.logger(options.verbose);
+		logger = new common.logger(options.verbose);
 		if (src.tags) {
 			state.options = options;
 			logger.log('Removing unused tags');
@@ -53,3 +53,4 @@ module.exports = {
 		return src;
 	}
 };
+

@@ -1,12 +1,10 @@
 var _ = require('lodash');
 var common = require('./common.js');
 
-var logger;
-
 module.exports = {
 
 	optimise : function(src,options) {
-		logger = common.logger(options.verbose);
+		var logger = new common.logger(options.verbose);
 		if (src.produces || src.consumes) {
 			logger.log('Optimising produces/consumes');
 			common.forEachAction(src,function(action){
@@ -22,3 +20,4 @@ module.exports = {
 		return src;
 	}
 };
+

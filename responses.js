@@ -28,7 +28,7 @@ function gatherResponses(src) {
 
 module.exports = {
 	optimise : function(src,options) {
-		logger = common.logger(options.verbose);
+		logger = new common.logger(options.verbose);
 		if (src.responses) {
 			logger.log('Removing unused responses');
 			state.responses = gatherResponses(src);
@@ -46,3 +46,4 @@ module.exports = {
 		return src;
 	}
 };
+

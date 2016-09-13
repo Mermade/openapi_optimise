@@ -15,7 +15,7 @@ module.exports = {
 
 	optimise : function(src,options) {
 
-		logger = common.logger(options.verbose);
+		logger = new common.logger(options.verbose);
 
 		var state = {};
 		state.security = gatherSecurity(src);
