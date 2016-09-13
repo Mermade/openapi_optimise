@@ -34,7 +34,7 @@ function analyse(gState,definition,models,base,key) {
 			model.length = json.length;
 			models.push(model);
 		}
-		if (state.key == "$ref") {
+		if ((state.key == "$ref") && (typeof obj == 'string')) {
 			var ref = obj;
 			if (ref.startsWith('#/definitions/')) {
 				ref = ref.replace('#/definitions/','');
@@ -61,21 +61,19 @@ function extractModels(state,src,depth) {
 	}
 
 	common.forEachPath(src,function(path,pptr,name){
-
 		for (var p in path.parameters) {
 			var param = path.parameters[p];
 			if (param.schema) {
-				analyse(state,param.schema,pptr+'/parameters/',p);
+				analyse(state,param.schema,models,pptr+'/parameters/',p);
 			}
 		}
-
 	});
 
 	common.forEachAction(src,function(action,aptr,name){
 
 		for (var p in action.parameters) {
 			var param = action.parameters[p];
-			if ((param.schema)) {//&& (!param.schema["$ref"])) {
+			if (param.schema) {
 				var pptr = aptr + '/parameters/';
 				analyse(state,param.schema,models,pptr,p);
 			}
@@ -83,9 +81,9 @@ function extractModels(state,src,depth) {
 
 		for (var r in action.responses) {
 			var response = action.responses[r];
-			if (response.schema) {//&& (!response.schema["$ref"])) {
+			if (response.schema) {
 				var rptr = aptr + '/responses/';
-				analyse(state,response,models,rptr,r);
+				analyse(state,response.schema,models,rptr,r);
 			}
 		}
 
@@ -95,7 +93,7 @@ function extractModels(state,src,depth) {
 		var cptr = '#/parameters';
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
-			if ((param.schema) && (!param.schema["$ref"])) {
+			if (param.schema) {
 				var pptr = cptr + '/';
 				analyse(state,param.schema,models,pptr,p);
 			}
@@ -106,9 +104,9 @@ function extractModels(state,src,depth) {
 		var cptr = '#/responses';
 		for (var r in src.responses) {
 			var response = src.responses[r];
-			if ((response.schema) && (!response.schema["$ref"])) {
+			if (response.schema) {
 				var rptr = cptr + '/' + r; // r is an HTTP response status code, does not need escaping
-				analyse(state,response.schema.models,rptr,r);
+				analyse(state,response.schema,models,rptr,r);
 			}
 		}
 	}
@@ -227,22 +225,24 @@ module.exports = {
 
 	optimise : function(src,options) {
 
-		logger = common.logger(options.verbose);
+		logger = new common.logger(options.verbose);
 		var state = {};
 
 		// we could always expand all existing $ref's here, but it is unlikely we would do a better job of renaming them all
 		// when compressing again. It is also time and memory costly. This is available by setting options.expand = true
-
 		if (options.expand) {
 			src = deref.expand(src,options);
 		}
+
 		// always create #/definitions once, outside the loop, if no referencees are extracted, we delete it again later
 		if (!src.definitions) {
 			src.definitions = {};
 		}
+		var newDefs = {};
 
 		var changes = 1;
 		state.depth = 0;
+		var oModels = -1;
 		while (changes>0) {
 			changes = 0;
 			state.matches = [];
@@ -269,7 +269,7 @@ module.exports = {
 				return 0;
 			});
 
-			if (state.models.length>0) {
+			if ((state.models.length>0) && (state.models.length!=oModels)) {
 				deepCompare(state);
 				matchModels(state);
 
@@ -283,9 +283,10 @@ module.exports = {
 
 					var stillThere = jptr.jptr(src,match.locations[0].path);
 
+					// this is where we create the new definition
 					var stop = 1;
 					if ((!options.inline) || (!stillThere)) {
-						src.definitions[newName] = _.clone(match.model.definition); //was cloneDeep
+						newDefs[newName] = _.clone(match.model.definition);
 						stop = 0;
 					}
 
@@ -318,7 +319,11 @@ module.exports = {
 				}
 			}
 			state.depth++;
+			oModels = state.models.length;
 		}
+
+		src.definitions = Object.assign({},src.definitions,newDefs); // names are unique over state.definitions which is kept in sync
+
 		common.clean(src,'definitions');
 
 		return src;

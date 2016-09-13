@@ -29,6 +29,12 @@ var argv = require('yargs')
 	//.boolean('alternative')
 	//.describe('alternative','use alternative dereferencing algorithm')
 	//.alias('a','alternative')
+	.boolean('compress')
+	.alias('c','compress')
+	.describe('compress','compress models')
+	.boolean('inline')
+	.alias('i','inline')
+	.describe('inline','inline $refs where possible')
 	.help('h')
     .alias('h', 'help')
 	.strict()
@@ -53,8 +59,7 @@ var blacklist = require(path.resolve('./blacklist.json'));
 
 var pathspec = argv._.length>0 ? argv._[0] : '../openapi-directory/APIs/';
 
-var options = {};
-options.verbose = argv.verbose;
+var options = argv;
 options.preserveTags = true;
 
 function processSpec(src){
@@ -69,13 +74,16 @@ function processSpec(src){
 
 	var defo = _.cloneDeep(src);
 	defo = oao.defaultOptimisations(defo,options);
+	if (argv.compress) {
+		defo = oao.nonDefaultOptimisations(defo,options);
+	}
 	//if (argv.alternative) {
 		// hmm, takes a callback
 		// could use async library:series http://stackoverflow.com/a/9884496/139404
 		//defo = SwaggerParser.dereference(defo, [options], [callback]);
 	//}
 	//else {
-		defo = sd.expand(defo,options);
+	defo = sd.expand(defo,options);
 	//}
 	defo = munge.munge(defo,options); // (re)instates optional objects/arrays
 	var defoStr = JSON.stringify(defo,null,2);
@@ -155,6 +163,7 @@ rr(pathspec, function (err, files) {
 
 process.on('exit',function(code) {
 	if (failures.length>0) {
+		failures.sort();
 		console.log(red);
 		for (var f in failures) {
 			console.log(red+failures[f]);
