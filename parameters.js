@@ -16,7 +16,7 @@ function transform(param) {
 		delete newParam.required;
 	}
 	if (newParam.allowEmptyValue === false) {
-		delete newParam.allowEmptyValue; // applies only to 'in' query or formdata parameters
+		delete newParam.allowEmptyValue; // applies only to in:query or in:formdata parameters
 	}
 	if (newParam.collectionFormat == 'csv') {
 		delete newParam.collectionFormat;
@@ -39,10 +39,13 @@ function transform(param) {
 		delete newParam.minItems;
 		delete newParam.maxItems;
 	}
-	if (newParam.exclusiveMinimum === 0) {
+	if (newParam.type == 'boolean') {
+		delete newParam["enum"]; // not prohibited by JSON Schema 4 but should be redundant
+	}
+	if (newParam.exclusiveMaximum === false) {
 		delete newParam.exclusiveMaximum;
 	}
-	if (newParam.minimum === 0) {
+	if (newParam.exclusiveMinimum === false) {
 		delete newParam.exclusiveMinimum;
 	}
 	if (newParam.minLength === 0) {
@@ -137,7 +140,7 @@ module.exports = {
 
 	optimise : function(src,options) {
 
-		logger = common.logger(options.verbose);
+		logger = new common.logger(options.verbose);
 
 		state.options = options;
 		state.cache = [];
