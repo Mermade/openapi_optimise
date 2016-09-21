@@ -39,7 +39,7 @@ function recurse(obj,state,callback) {
 		state.parents = [];
 		state.depth = 0;
 	}
-	var first = ((typeof state.depth == 'undefined') || (state.depth === 0)); //_.isEqual(state.parents,[]);
+	var first = ((typeof state.depth == 'undefined') || (state.depth === 0));
 	if (!state.keys) {
 		state.keys = [];
 		state.keys.push(state.key ? state.key : state.key = '');
@@ -58,13 +58,15 @@ function recurse(obj,state,callback) {
 			if (!obj.hasOwnProperty(key)) continue;
 
 			state.parents.push(obj);
+			state.parent = obj;
 			state.keys.push(key);
 			state.key = key;
 			state.path = state.paths[state.paths.length-1]+'/'+jptr.jpescape(key);
 			state.paths.push(state.path);
 			state.depth++;
-			callback(obj[key],state);
+			if (!state.options.depthFirst) callback(obj[key],state);
 			recurse(obj[key],state,callback);
+			if (state.options.depthFirst) callback(obj[key],state);
 			state.parents.pop();
 			state.keys.pop();
 			state.paths.pop();
