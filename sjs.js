@@ -1,5 +1,5 @@
 /**
-analyse json schema
+simplify json schema
 
 Useful for schemas automatically generated from multiple input JSON files
 */
