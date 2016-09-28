@@ -6,7 +6,7 @@ var crypto = require('crypto');
 var _ = require('lodash');
 var jptr = require('jgexml/jpath');
 
-var actions = ['get','head','post','put','delete','patch','options','trace','connect'];
+var actions = ['get','head','post','put','delete','patch','options']; //,'trace','connect'];
 
 var empty = [];
 empty.push({});

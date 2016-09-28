@@ -3,6 +3,8 @@
 [![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
 [![Tested on Mermade OpenAPIs](https://mermade.github.io/openapi_optimise/tested.svg)](https://github.com/mermade/openapi_specifications)
 
+![Logo](https://mermade.github.io/openapi_optimise/logo.png)
+
 A set of utility functions to optimise OpenApi (swagger) 2.0 specifications
 
 These optimisations may be most useful when the OpenApi specification has been converted from another format or

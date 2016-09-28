@@ -7,7 +7,7 @@ Useful for schemas automatically generated from multiple input JSON files
 var fs = require('fs');
 var path = require('path');
 var _ = require('lodash');
-var common = require('../common.js');
+var common = require('./common.js');
 
 var argv = require('yargs')
 	.usage('ajs [options] {source} [{target}]')
@@ -19,7 +19,7 @@ var argv = require('yargs')
 	.describe('depth','maximum depth to output')
 	.alias('p','properties')
 	.describe('properties','maximum number of properties to allow before coalescing')
-	.default('depth',Math.MAX_VALUE)
+	.default('depth',Number.MAX_VALUE)
 	.version(function() {
 		return require('../package.json').version;
 	})
@@ -31,12 +31,12 @@ function process(src) {
 		if ((state.key == 'type') && (obj == '*')) {
 			delete state.parents[state.parents.length-1][state.key];
 		}
-		if (state.depth>argv.depth) {
+		if ((state.depth>argv.depth) && (Object.keys(obj).length>0)) {
 			state.parents[state.parents.length-1][state.key] = {};
 			changes++;
 		}
-		else if ((!Array.isArray(obj)) && (Object.keys(obj).length>argv.properties)) {
-			console.log('  %s',state.key);
+		else if ((!Array.isArray(obj)) && (Object.keys(obj).length>argv.properties) && (state.key == 'properties')) {
+			console.log('  %s has %s',state.key,Object.keys(obj).length);
 			var newObj = {};
 			newObj.patternProperties = {};
 			var ppp = {};
