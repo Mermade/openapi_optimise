@@ -106,7 +106,7 @@ function processSpec(src){
 
 function check(file) {
 	var result = true;
-	var components = file.split('\\');
+	var components = file.split(path.sep);
 
 	if ((components[components.length-1] == 'swagger.yaml') || (components[components.length-1] == 'swagger.json')) {
 		console.log(file);
