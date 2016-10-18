@@ -1,6 +1,6 @@
 # openapi_optimise
 
-[![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
+![Build](https://img.shields.io/travis/Mermade/openapi_optimise.svg) [![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
 [![Tested on Mermade OpenAPIs](https://mermade.github.io/openapi_optimise/tested.svg)](https://github.com/mermade/openapi_specifications)
 
 ![Logo](https://mermade.github.io/openapi_optimise/logo.png)
