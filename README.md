@@ -1,7 +1,7 @@
 # openapi_optimise
 
 ![Build](https://img.shields.io/travis/Mermade/openapi_optimise.svg) [![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
-[![Tested on Mermade OpenAPIs](https://img.shields.io/badge/Additional%20Specs-419-brightgreen.svg)](https://github.com/mermade/openapi_specifications)
+[![Tested on Mermade OpenAPIs](https://img.shields.io/badge/Additional%20Specs-882-brightgreen.svg)](https://github.com/mermade/openapi_specifications)
 
 ![Logo](https://mermade.github.io/openapi_optimise/logo.png)
 
@@ -86,4 +86,5 @@ The test harness currently expects files named `swagger.yaml` or `swagger.json` 
 
 * [APIs.guru](https://github.com/APIs-guru/openapi-directory)
 * [Mermade OpenApi specifications collection](https://github.com/mermade/openapi_specifications)
+* [SOM Research HAPI](https://github.com/som-research/hapi)
 
