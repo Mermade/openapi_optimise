@@ -4,7 +4,6 @@ var path = require('path');
 
 var _ = require('lodash');
 var yaml = require('js-yaml');
-var j2y = require('jgexml/json2yaml.js');
 
 var common = require('./common.js');
 var opt = require('./index.js');
@@ -36,7 +35,8 @@ var argv = require('yargs')
 	.describe('force','allow overwriting of source with target')
 	.boolean('jsyaml')
 	.alias('j','jsyaml')
-	.describe('jsyaml','use jsyaml for output, default jgexml')
+	.default('jsyaml',true)
+	.describe('jsyaml','use jsyaml for output')
 	.boolean('skip-defaults')
 	.alias('s','skip-defaults')
 	.describe('skip-defaults','do not perform default optimisations')
@@ -113,12 +113,7 @@ if (argv.nondefault) {
 
 var outStr;
 if ((argv.yaml) || (argv.yamlwrite)) {
-	if (argv.jsyaml) {
-		outStr = yaml.safeDump(dest);
-	}
-	else {
-		outStr = j2y.getYaml(dest);
-	}
+	outStr = yaml.safeDump(dest);
 }
 else {
 	var indent = (argv.unindent ? '' : '\t');
