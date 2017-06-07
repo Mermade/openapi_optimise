@@ -2,6 +2,7 @@
 
 ![Build](https://img.shields.io/travis/Mermade/openapi_optimise.svg) [![Tested on APIs.guru](https://api.apis.guru/badges/tested_on.svg)](https://APIs.guru)
 [![Tested on Mermade OpenAPIs](https://img.shields.io/badge/Additional%20Specs-882-brightgreen.svg)](https://github.com/mermade/openapi_specifications)
+[![Greenkeeper badge](https://badges.greenkeeper.io/Mermade/openapi_optimise.svg)](https://greenkeeper.io/)
 
 ![Logo](https://mermade.github.io/openapi_optimise/logo.png)
 
