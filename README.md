@@ -42,19 +42,19 @@ As these currently consume excessive memory or have not been sufficiently tested
 
 ## Usage
 
-````javascript
+```javascript
 var opt = require('openapi_optimise');
 
 var options = {};
 // options.verbose = 1;
 var dest = opt.defaultOptimisations(swagger,options);
-````
+```
 
 ## Included command-line tool
 
 * `openapi_optimise` applies all safe optimisations by default
 
-````
+```
 openapi_optimise {infile} [{outfile}]
 
 Options:
@@ -73,15 +73,15 @@ Options:
                        JSON)                                           [boolean]
   -r, --yamlread       read specification in yaml format               [boolean]
   -w, --yamlwrite      write specification in yaml format              [boolean]
-````
+```
 
 ## Tests
 
 To run a test-suite:
 
-````
+```
 node testRunner {path-to-APIs}
-````
+```
 
 The test harness currently expects files named `swagger.yaml` or `swagger.json` and has been tested against
 
