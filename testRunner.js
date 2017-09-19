@@ -36,11 +36,9 @@ var argv = require('yargs')
 	.alias('i','inline')
 	.describe('inline','inline $refs where possible')
 	.help('h')
-    .alias('h', 'help')
+	.alias('h', 'help')
 	.strict()
-	.version(function() {
-		return require('../package.json').version;
-	})
+	.version()
 	.argv;
 
 var SwaggerParser = require('swagger-parser');

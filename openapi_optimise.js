@@ -58,10 +58,8 @@ var argv = require('yargs')
 	.demand(1)
 	.strict()
 	.help('h')
-    .alias('h', 'help')
-	.version(function() {
-		return require('../package.json').version;
-	})
+    	.alias('h', 'help')
+	.version()
 	.argv;
 
 var logger = new common.logger(argv.verbose);

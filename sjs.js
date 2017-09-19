@@ -14,15 +14,13 @@ var argv = require('yargs')
 	.demand(2)
 	.strict()
 	.help('h')
-    .alias('h', 'help')
+	.alias('h', 'help')
 	.alias('d','depth')
 	.describe('depth','maximum depth to output')
 	.alias('p','properties')
 	.describe('properties','maximum number of properties to allow before coalescing')
 	.default('depth',Number.MAX_VALUE)
-	.version(function() {
-		return require('../package.json').version;
-	})
+	.version()
 	.argv;
 
 function process(src) {
