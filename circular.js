@@ -116,7 +116,18 @@ module.exports = {
 			var circle = circles[c];
 			for (var cc in circle.children) {
 				var child = circle.children[cc];
-				if (child.ref == ref) return true;
+				if ((circle.ref === ref) && (child.ref === ref)) return true;
+			}
+		}
+		return false;
+	},
+
+	hasCircles : function (circles,ref) {
+		for (var c in circles) {
+			var circle = circles[c];
+			for (var cc in circle.children) {
+				var child = circle.children[cc];
+				if (child.ref === ref) return true;
 			}
 		}
 		return false;
