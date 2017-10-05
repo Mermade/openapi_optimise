@@ -1,6 +1,6 @@
 {
   "name": "openapi_optimise",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Utilities to optimise OpenApi (swagger 2.0) specifications",
   "main": "index.js",
   "scripts": {
