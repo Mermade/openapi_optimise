@@ -82,13 +82,8 @@ if ((infile === outfile) && (!argv.force)) {
 }
 
 var src;
-if ((argv.yaml) || (argv.yamlread)) {
-	var srcStr = fs.readFileSync(path.resolve(infile),'utf8');
-	src = yaml.safeLoad(srcStr);
-}
-else {
-	src = require(path.resolve(infile));
-}
+var srcStr = fs.readFileSync(path.resolve(infile),'utf8');
+src = yaml.safeLoad(srcStr,{json:true});
 
 var dest;
 if (argv.skipDefaults) {

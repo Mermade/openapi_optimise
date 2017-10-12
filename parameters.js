@@ -1,5 +1,7 @@
 /* openApi (swagger 2.0) optimiser */
 
+const util = require('util');
+
 var common = require('./common.js');
 var _ = require('lodash');
 
@@ -195,11 +197,13 @@ module.exports = {
 						if ((entry.locations[0].level == 1) && (entry.locations[0].path == location.path)) {
 							// redundant duplication (override with no differences) of path-level parameter
 							src.paths[location.path][location.action].parameters.splice(location.index,1);
+							entry.seen = true; // new
 						}
 						else {
 							var newDef = {};
 							newDef["$ref"] = '#/parameters/'+newName;
 							src.paths[location.path][location.action].parameters[location.index] = newDef;
+							entry.seen = true; // new
 						}
 					}
 				}

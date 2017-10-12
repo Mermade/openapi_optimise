@@ -1,12 +1,14 @@
+'use strict';
+
 /** common functions
 *
 */
 
-var crypto = require('crypto');
-var _ = require('lodash');
-var jptr = require('jgexml/jpath');
+const crypto = require('crypto');
+const _ = require('lodash');
+const jptr = require('jgexml/jpath');
 
-var actions = ['get','head','post','put','delete','patch','options']; //,'trace','connect'];
+const actions = ['get','head','post','put','delete','patch','options','trace']; //,'connect'];
 
 var empty = [];
 empty.push({});
@@ -144,6 +146,25 @@ module.exports = {
 		var shasum = crypto.createHash('sha1');
 		shasum.update(s);
 		return shasum.digest('hex');
+	},
+
+	locations : function(api) {
+		if (api.swagger) {
+			return {
+				parameters:'#/parameters',
+				schemas:'#/definitions'
+			};
+		}
+		if (api.openapi) {
+			return {
+				parameters:'#/components/parameters',
+				schemas:'#/components/schemas'
+			};
+		}
+		return {
+			parameters:'#/',
+			schemas:'#/'
+		}
 	}
 
 };
