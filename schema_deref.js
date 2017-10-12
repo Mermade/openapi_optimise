@@ -73,7 +73,7 @@ module.exports = {
 					var reference = obj;
 
 					if (skip.indexOf(reference)<0) {
-						var result = jptr.jptr(lib,reference); //_.cloneDeep(
+						var result = _.cloneDeep(jptr.jptr(lib,reference)); // reinstated _.cloneDeep q: was this a performance concern?
 						if (result) {
 							state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
 							changes++;
