@@ -113,7 +113,13 @@ function check(file) {
 
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		var src;
-		src = yaml.safeLoad(srcStr,{json:true});
+		try {
+			src = yaml.safeLoad(srcStr,{json:true});
+		}
+		catch (ex) {
+			console.log(red+ex.message);
+			return true;
+		}
 		if (!src.swagger && !src.openapi) {
 			return true;
 		}
