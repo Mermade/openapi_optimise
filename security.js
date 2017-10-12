@@ -27,7 +27,7 @@ module.exports = {
 			for (var s in src.security){
 				var sec = src.security[s];
 				for (var p in sec) {
-					if (state.security[p]) {
+					if (state.security && state.security[p]) {
 						state.security[p].seen++;
 					}
 				}

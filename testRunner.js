@@ -1,19 +1,21 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var rr = require('recursive-readdir');
-var yaml = require('js-yaml');
-var _ = require('lodash');
-var oao = require('./index.js');
-var common = require('./common.js');
-var sd = require('./schema_deref.js');
-var empty = require('./empty.js');
-var tags = require('./tags.js');
-var security = require('./security.js');
-var munge = require('./munge.js');
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
 
-var argv = require('yargs')
+const rr = require('recursive-readdir');
+const yaml = require('js-yaml');
+const _ = require('lodash');
+const oao = require('./index.js');
+const common = require('./common.js');
+const sd = require('./schema_deref.js');
+const empty = require('./empty.js');
+const tags = require('./tags.js');
+const security = require('./security.js');
+const munge = require('./munge.js');
+
+const argv = require('yargs')
 	.usage('testRunner [options] [{path-to-specs}]')
 	.count('verbose')
 	.alias('v','verbose')
@@ -106,16 +108,14 @@ function check(file) {
 	var result = true;
 	var components = file.split(path.sep);
 
-	if ((components[components.length-1] == 'swagger.yaml') || (components[components.length-1] == 'swagger.json')) {
+	if ((components[components.length-1].endsWith('.yaml')) || (components[components.length-1].endsWith('.json'))) {
 		console.log(file);
 
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		var src;
-		if (components[components.length-1] == 'swagger.yaml') {
-			src = yaml.safeLoad(srcStr);
-		}
-		else {
-			src = JSON.parse(srcStr);
+		src = yaml.safeLoad(srcStr,{json:true});
+		if (!src.swagger && !src.openapi) {
+			return true;
 		}
 		console.log('  %s %s',src.info.title,src.info.version);
 		console.log('  %s',src.host);
