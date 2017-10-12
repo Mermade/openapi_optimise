@@ -175,4 +175,5 @@ process.on('exit',function(code) {
 		console.log(normal);
 	}
 	console.log('Tests: %s passing, %s failing, %s invalid, %s pending',pass,fail,invalid,pending);
+	process.exitCode = ((fail === 0) && (pass > 0)) ? 0 : 1;
 });
