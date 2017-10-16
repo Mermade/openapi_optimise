@@ -6,7 +6,7 @@
 */
 
 var _ = require('lodash');
-var jptr = require('jgexml/jpath.js');
+var jptr = require('reftools/lib/jptr.js');
 var common = require('./common.js');
 var circular = require('./circular.js');
 
@@ -44,14 +44,14 @@ module.exports = {
 			changes = 0;
 			var iState = {};
 			iState.path = '#/definitions';
-			common.recurse(lib.definitions,iState,function(obj,state){
-				if ((state.key == '$ref') && (typeof obj === 'string')) {
-					var reference = obj;
+			common.recurse(lib.definitions,iState,function(obj,key,state){
+				if ((key === '$ref') && (typeof obj[key] === 'string')) {
+					var reference = obj[key];
 					if (skip.indexOf(reference)<0) {
 						logger.debug(obj+' @ '+state.path);
 						var result = _.cloneDeep(jptr.jptr(lib,reference));
 						if (result) {
-							state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+							state.parent[state.pkey] = result;
 							changes++;
 						}
 						else {
@@ -68,14 +68,14 @@ module.exports = {
 		while (changes>=1) {
 			changes = 0;
 
-			common.recurse(src,{},function(obj,state){
-				if ((state.key == '$ref') && (typeof obj === 'string')) {
-					var reference = obj;
+			common.recurse(src,{},function(obj,key,state){
+				if ((key === '$ref') && (typeof obj[key] === 'string')) {
+					var reference = obj[key];
 
 					if (skip.indexOf(reference)<0) {
 						var result = _.cloneDeep(jptr.jptr(lib,reference)); // reinstated _.cloneDeep q: was this a performance concern?
 						if (result) {
-							state.parents[state.parents.length-2][state.keys[state.keys.length-2]] = result;
+							state.parent[state.pkey] = result;
 							changes++;
 						}
 						else {

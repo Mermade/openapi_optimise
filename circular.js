@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var jptr = require('jgexml/jpath.js');
+var jptr = require('reftools/lib/jptr.js');
 var common = require('./common.js');
 
 function dump(defs,title,logger) {
@@ -19,10 +19,10 @@ function topoSort(src,options) {
 	var defs = [];
 	var logger = new common.logger(options.verbose);
 
-	common.recurse(src,{},function(obj,state){
-		if ((state.key == '$ref') && (typeof obj === 'string')) {
+	common.recurse(src,{},function(obj,key,state){
+		if ((key == '$ref') && (typeof obj[key] === 'string')) {
 
-			if (obj == state.path) {
+			if (obj[key] == state.path) {
 				logger.write('  Direct circular reference!');
 			}
 
@@ -38,27 +38,27 @@ function topoSort(src,options) {
 				if (found) break;
 			}
 			if (!found) {
-				entry.ref = obj;
+				entry.ref = obj[key];
 				entry.seen = 1;
 				entry.children = [];
 				defs.push(entry);
 			}
 
-			var ref = obj;
+			var ref = obj[key];
 			var restart = jptr.jptr(src,ref);
 
-			var parent = state.parents[state.parents.length-1];
+			var parent = state.parent;
 			var newState = {};
 
-			common.recurse(restart,newState,function(obj,state) {
-				if ((state.key == '$ref') && (typeof obj === 'string')) {
+			common.recurse(restart,newState,function(obj,key,state) {
+				if ((key == '$ref') && (typeof obj[key] === 'string')) {
 					var child = {};
-					child.ref = obj;
+					child.ref = obj[key];
 
 					var found = false;
 					for (var c in entry.children) {
 						var compare = entry.children[c];
-						if (compare.ref == obj) {
+						if (compare.ref === obj[key]) {
 							found = true;
 						}
 					}

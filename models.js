@@ -5,7 +5,7 @@
 var _ = require('lodash');
 var common = require('./common.js');
 var deref = require('./schema_deref.js');
-var jptr = require('jgexml/jpath.js');
+var jptr = require('reftools/lib/jptr.js');
 
 var MIN_LENGTH = '{"$ref": "#/definitions/m"},{"m": {}'.length;
 var logger;
@@ -14,28 +14,27 @@ function analyse(gState,definition,models,base,key) {
 	var state = {};
 	state.path = base+jptr.jpescape(key);
 	state.key = key;
-	state.parents = [];
-	state.parents.push(definition);
-	common.recurse(definition,state,function(obj,state){
+	state.parent = definition;
+	common.recurse(definition,state,function(obj,key,state){
 		var model = {};
-		if (common.isEmpty(obj)) {
+		if (common.isEmpty(obj[key])) {
 			model.definition = {};
 		}
 		else {
-			model.definition = obj;
+			model.definition = obj[key];
 		}
-		model.name = state.key;
+		model.name = key;
 		model.path = state.path; //path+'/'+key;
-		var json = JSON.stringify(obj);
-		model.parent = state.parents[state.parents.length-1]; // a direct object reference is smaller than storing the another JSON pointer etc
+		var json = JSON.stringify(obj[key]);
+		model.parent = state.parent; // a direct object reference is smaller than storing another JSON pointer etc
 		if ((json.length >= MIN_LENGTH) && (model.definition.type) ) {
 			//&& ((model.definition.type == 'object') || (model.definition.type == 'array'))) {
 			model.hash = common.sha1(json);
 			model.length = json.length;
 			models.push(model);
 		}
-		if ((state.key == "$ref") && (typeof obj == 'string')) {
-			var ref = obj;
+		if ((key === "$ref") && (typeof obj[key] === 'string')) {
+			var ref = obj[key];
 			if (ref.startsWith('#/definitions/')) {
 				ref = ref.replace('#/definitions/','');
 				var sd = _.find(gState.definitions,function(o) { return o.name == ref;} );

@@ -25,23 +25,23 @@ var argv = require('yargs')
 
 function process(src) {
 	var changes = 0;
-	common.recurse(src,{},function(obj,state) {
-		if ((state.key == 'type') && (obj == '*')) {
-			delete state.parents[state.parents.length-1][state.key];
+	common.recurse(src,{},function(obj,key,state) {
+		if ((key === 'type') && (obj[key] === '*')) {
+			delete obj[key];
 		}
-		if ((state.depth>argv.depth) && (Object.keys(obj).length>0)) {
-			state.parents[state.parents.length-1][state.key] = {};
+		if ((state.depth>argv.depth) && (Object.keys(obj[key]).length>0)) {
+			state.parent[state.pkey] = {};
 			changes++;
 		}
-		else if ((!Array.isArray(obj)) && (Object.keys(obj).length>argv.properties) && (state.key == 'properties')) {
-			console.log('  %s has %s',state.key,Object.keys(obj).length);
+		else if ((!Array.isArray(obj[key])) && (Object.keys(obj[key]).length>argv.properties) && (state.key == 'properties')) {
+			console.log('  %s has %s',state.key,Object.keys(obj[key]).length);
 			var newObj = {};
 			newObj.patternProperties = {};
 			var ppp = {};
-			for (var p in obj) {
+			for (var p in obj[key]) {
 				// TODO we want the minimal common set of 'required' here
-				if (typeof obj[p] === 'object') {
-					ppp = _.mergeWith(ppp,obj[p],function(objValue, srcValue, key, object, source, stack){
+				if (typeof obj[key][p] === 'object') {
+					ppp = _.mergeWith(ppp,obj[key][p],function(objValue, srcValue, key, object, source, stack){
 						if ((key == 'type') && (typeof objValue == 'string') && (objValue != srcValue)) {
 							return '*';
 						}
@@ -57,8 +57,8 @@ function process(src) {
 			newObj.type = 'object';
 			newObj.required = _.cloneDeep(ppp.required);
 			delete ppp.required;
-			state.parents[state.parents.length-1].patternProperties = newObj.patternProperties;
-			delete state.parents[state.parents.length-1].properties;
+			state.parent.patternProperties = newObj.patternProperties;
+			delete state.parent.properties;
 			changes++;
 		}
 	});

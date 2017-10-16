@@ -11,8 +11,8 @@ function gatherTags(src) {
 		tag.definition = src.tags[t];
 		tag.seen = 0;
 		tag.vendorExtension = false;
-		common.recurse(src.tags[t],{},function(obj,rState){
-			if (rState.key.startsWith('x-')) {
+		common.recurse(src.tags[t],{},function(obj,key,rState){
+			if (key.startsWith('x-')) {
 				tag.vendorExtension = true;
 			}
 		});

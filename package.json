@@ -25,9 +25,9 @@
   },
   "homepage": "https://github.com/Mermade/openapi_optimise#readme",
   "dependencies": {
-    "jgexml": "latest",
     "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
+    "reftools": "^0.0.20",
     "yargs": "^11.0.0"
   },
   "devDependencies": {

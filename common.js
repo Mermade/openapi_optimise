@@ -6,7 +6,8 @@
 
 const crypto = require('crypto');
 const _ = require('lodash');
-const jptr = require('jgexml/jpath');
+const jptr = require('reftools/lib/jptr.js');
+const recurse = require('reftools/lib/recurse.js').recurse;
 
 const actions = ['get','head','post','put','delete','patch','options','trace']; //,'connect'];
 
@@ -26,59 +27,6 @@ e4.additionalProperties = true;
 empty.push(e4);
 
 var commonLogger;
-
-/* state object contains
-* options (input)
-* parents,keys,paths (output)
-*
-* Initially you can pass in an empty object as the state or;
-* You can pass in a key and path if you are starting the descent not at the root of
-* an object, but wish the returned paths to be relative to the root. depth is always relative
-*/
-function recurse(obj,state,callback) {
-
-	if (!state.parents) {
-		state.parents = [];
-		state.depth = 0;
-	}
-	var first = ((typeof state.depth == 'undefined') || (state.depth === 0));
-	if (!state.keys) {
-		state.keys = [];
-		state.keys.push(state.key ? state.key : state.key = '');
-	}
-	if (!state.paths) {
-		state.paths = [];
-		state.paths.push(state.path ? state.path : state.path = '#');
-	}
-	if (!state.options) state.options = {}; // Object.assign with defaults
-
-	if (first) callback(obj,state);
-
-	if (typeof obj !== 'string') {
-		for (var key in obj) {
-			// skip loop if the property is from prototype
-			if (!obj.hasOwnProperty(key)) continue;
-
-			state.parents.push(obj);
-			state.parent = obj;
-			state.keys.push(key);
-			state.key = key;
-			state.path = state.paths[state.paths.length-1]+'/'+jptr.jpescape(key);
-			state.paths.push(state.path);
-			state.depth++;
-			if (!state.options.depthFirst) callback(obj[key],state);
-			recurse(obj[key],state,callback);
-			if (state.options.depthFirst) callback(obj[key],state);
-			state.parents.pop();
-			state.keys.pop();
-			state.paths.pop();
-			state.depth--;
-
-		}
-	}
-
-	return obj;
-}
 
 function logger(verbosity) {
 	this.verbosity = verbosity;
