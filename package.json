@@ -28,7 +28,7 @@
     "jgexml": "latest",
     "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
-    "yargs": "^9.0.1"
+    "yargs": "^10.0.3"
   },
   "devDependencies": {
     "recursive-readdir": "^2.0.0",
