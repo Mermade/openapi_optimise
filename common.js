@@ -9,7 +9,7 @@ const _ = require('lodash');
 const jptr = require('reftools/lib/jptr.js');
 const recurse = require('reftools/lib/recurse.js').recurse;
 
-const actions = ['get','head','post','put','delete','patch','options','trace']; //,'connect'];
+const actions = ['get','head','post','put','delete','patch','options','trace']; // trace is OAS 3+
 
 var empty = [];
 empty.push({});

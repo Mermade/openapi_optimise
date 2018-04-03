@@ -11,7 +11,7 @@ var deref = require('./schema_deref.js');
 var circular = require('./circular.js');
 
 var argv = require('yargs')
-	.usage('openapi_optimise {source} [{target}]')
+	.usage('openapi_optimise [options] {source} [{target}]')
 	.count('verbose')
 	.alias('v','verbose')
 	.alias('n','nondefault')
@@ -87,7 +87,8 @@ src = yaml.safeLoad(srcStr,{json:true});
 
 var dest;
 if (argv.skipDefaults) {
-	dest = _.cloneDeep(src);
+	//dest = _.cloneDeep(src);
+	dest = opt.minimumOptimisations(src,argv);
 	if (argv.analyse) {
 		var circles = circular.getCircularRefs(dest,argv);
 		console.log('Circular references %s',circles.length);
@@ -106,7 +107,7 @@ if (argv.nondefault) {
 
 var outStr;
 if ((argv.yaml) || (argv.yamlwrite)) {
-	outStr = yaml.safeDump(dest);
+	outStr = yaml.safeDump(dest,{lineWidth:-1});
 }
 else {
 	var indent = (argv.unindent ? '' : '\t');

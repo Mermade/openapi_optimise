@@ -25,6 +25,14 @@ module.exports = {
 
 		return opt;
 	},
+
+    minimumOptimisations : function(swagger,options) {
+        var opt = _.cloneDeep(swagger);
+        options.minimum = true;
+		opt = parameters.optimise(opt,options);
+        return opt;
+    },
+
 	nonDefaultOptimisations: function(swagger,options) {
 		var opt = _.cloneDeep(swagger);
 

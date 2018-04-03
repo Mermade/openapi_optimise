@@ -73,6 +73,7 @@ function processSpec(src){
 	var expStr = JSON.stringify(exp,null,2);
 
 	var defo = _.cloneDeep(src);
+    options.minimum = true;
 	defo = oao.defaultOptimisations(defo,options);
 	if (argv.compress) {
 		defo = oao.nonDefaultOptimisations(defo,options);
@@ -124,7 +125,7 @@ function check(file) {
 		if (!src.swagger && !src.openapi) {
 			return true;
 		}
-		console.log('  %s %s (%s)',src.info.title,src.info.version,src.host);
+		console.log('  %s %s (%s)',src.info.title,src.info.version,src.swagger ? src.host : (src.servers ? src.servers[0].url : ''));
 
 		if (!argv.noBlacklist) {
 			for (var b in blacklist) {

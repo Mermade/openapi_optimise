@@ -1,5 +1,7 @@
 /* openApi (swagger 2.0) optimiser */
 
+'use strict';
+
 const util = require('util');
 
 var common = require('./common.js');
@@ -8,13 +10,21 @@ var _ = require('lodash');
 var state = {};
 var logger;
 
+function minimum(param) {
+	let newParam = _.cloneDeep(param);
+	if ((newParam["in"] !== 'path') && (newParam.required === false)) {
+		delete newParam.required;
+	}
+    return newParam;
+}
+
 function transform(param) {
-	newParam = _.cloneDeep(param);
+	let newParam = _.cloneDeep(param);
 	var numeric = ((newParam.type == 'integer') || (newParam.type == 'number'));
 	if (newParam.description === '') {
 		delete newParam.description;
 	}
-	if ((newParam["in"] != 'path') && (newParam.required === false)) {
+	if ((newParam["in"] !== 'path') && (newParam.required === false)) {
 		delete newParam.required;
 	}
 	if (newParam.allowEmptyValue === false) {
@@ -79,14 +89,15 @@ function uniq(params,name) {
 	return name+suffix;
 }
 
-function store(state,param,name,p,action,pa,level) {
+function store(state,param,name,p,action,pa,level,options) {
 	if (param["$ref"]) {
-		var refName = param["$ref"].replace('#/parameters/','');
+		var refName = options.openapi ? param["$ref"].replace('#/components/parameters/','') :
+            param["$ref"].replace('#/parameters/','');
 		for (var c in state.cache) {
 			var cp = state.cache[c];
 			for (var l in cp.locations) {
 				var locn = cp.locations[l];
-				if ((locn.level === 0) && (cp.name == refName)) {
+				if ((locn.level === 0) && (cp.name === refName)) {
 					cp.seen = true;
 				}
 			}
@@ -95,11 +106,11 @@ function store(state,param,name,p,action,pa,level) {
 	}
 	else {
 		var found = false;
-		var newp = transform(param);
+		var newp = options.transform(param);
 		for (var e in state.cache) {
 			var entry = state.cache[e];
 			if (_.isEqual(entry.definition,newp)) {
-				logger.info('Level ' + level + ' parameters '+entry.name+' and '+name+' are identical');
+				logger.info('Level ' + level + ' parameters '+entry.name+':'+entry.in+' and '+name+':'+newp.in+' are identical');
 				var location = {};
 				location.name = name;
 				location.path = p;
@@ -107,6 +118,7 @@ function store(state,param,name,p,action,pa,level) {
 				location.index = pa;
 				location.level = level;
 				location.operations = 0;
+                location.in = newp.in;
 				entry.locations.push(location);
 				found = true;
 			}
@@ -120,8 +132,10 @@ function store(state,param,name,p,action,pa,level) {
 			var entry = {};
 			entry.definition = newp;
 			entry.name = name;
+            entry.in = param.in;
 			entry.locations = [];
 			entry.seen = (level>0);
+            entry.initial = level;
 			var location = {};
 			location.name = name;
 			location.path = p;
@@ -129,6 +143,7 @@ function store(state,param,name,p,action,pa,level) {
 			location.index = pa;
 			location.level = level;
 			location.operations = 0;
+            location.in = newp.in;
 			entry.locations.push(location);
 			state.cache.push(entry);
 		}
@@ -140,7 +155,14 @@ module.exports = {
 
 	transform : transform,
 
+    minimum : minimum,
+
 	optimise : function(src,options) {
+
+        if (options.minimum) options.transform = minimum
+        else options.transform = transform;
+
+        options.openapi = !!src.openapi;
 
 		logger = new common.logger(options.verbose);
 
@@ -150,7 +172,14 @@ module.exports = {
 
 		for (var p in src.parameters) {
 			var param = src.parameters[p];
-			param = store(state,param,p,'#/parameters/'+p,'all',-1,0);
+			param = store(state,param,p,'#/parameters/'+p,'all',-1,0,options);
+		}
+
+	 	if (src.components && src.components.parameters) {
+			for (var p in src.components.parameters) {
+				var param = src.components.parameters[p];
+				param = store(state,param,p,'#/components/parameters/'+p,'all',-1,0,options);
+			}
 		}
 
 		for (var p in src.paths) {
@@ -158,7 +187,7 @@ module.exports = {
 
 			for (var pa in path.parameters) {
 				var param = path.parameters[pa];
-				param = store(state,param,param.name,p,'all',-1,1);
+				param = store(state,param,param.name,p,'all',-1,1,options);
 			}
 
 			var operations = 0;
@@ -168,7 +197,7 @@ module.exports = {
 					operations++;
 					for (var pa in action.parameters) {
 						var param = action.parameters[pa];
-						param = store(state,param,param.name,p,common.actions[a],pa,2);
+						param = store(state,param,param.name,p,common.actions[a],pa,2,options);
 					}
 				}
 			}
@@ -192,8 +221,8 @@ module.exports = {
 				logger.log('The following parameters can be merged into #/parameters/'+newName);
 				for (var l in entry.locations) {
 					var location = entry.locations[l];
-					logger.log('  '+entry.definition.name+' @ '+location.action+' '+location.path);
-					if (location.action != 'all') {
+					logger.log('  '+entry.definition.name+':'+entry.definition.in+' @ '+location.action+' '+location.path);
+					if ((location.action != 'all') && (entry.in === entry.locations[0].in)) {
 						if ((entry.locations[0].level == 1) && (entry.locations[0].path == location.path)) {
 							// redundant duplication (override with no differences) of path-level parameter
 							src.paths[location.path][location.action].parameters.splice(location.index,1);
@@ -218,8 +247,9 @@ module.exports = {
 					var entry = state.cache[e];
 					for (var l in entry.locations) {
 						var locn = entry.locations[l];
-						if ((locn.level == 2) && (entry.definition.required) && (locn.operations >= spath.operations)) {
-							src.paths[path].parameters.push(entry.definition);
+						if ((locn.level == 3) && (entry.definition.required) && (locn.operations >= spath.operations)) {
+						    console.log('  ',entry.name,entry.in);
+                            src.paths[path].parameters.push(entry.definition);
 							src.paths[p][locn.action].parameters.splice(locn.index,1);
 						}
 					}
@@ -242,7 +272,7 @@ module.exports = {
 							var matchName = '';
 							for (var e in state.cache) {
 								var entry = state.cache[e];
-								if (entry.name == refName) {
+								if ((entry.name === refName) && (entry.initial === 0)) {
 									matchName = refName;
 									break;
 								}

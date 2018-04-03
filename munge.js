@@ -39,6 +39,10 @@ module.exports = {
 			src.parameters[p] = parameters.transform(src.parameters[p]);
 		}
 
+        if (src.components && src.components.parameters) {
+			src.components.parameters[p] = parameters.transform(src.components.parameters[p]);
+        }
+
 		common.forEachPath(src,function(path){
 			for (var p in path.parameters) {
 				path.parameters[p] = parameters.transform(path.parameters[p]);

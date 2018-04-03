@@ -91,7 +91,7 @@ module.exports = {
 			if ((path.parameters) && (action.parameters)) {
 				logger.log('Merging path-level parameters to action @ '+ptr);
 				action.parameters = _.unionWith(action.parameters,path.parameters,function(a,b){
-					return ((a.name == b.name) && (a["in"] == b["in"]));
+					return ((a.name === b.name) && (a["in"] === b["in"]));
 				});
 			}
 		});
@@ -100,6 +100,7 @@ module.exports = {
 		});
 
 		common.clean(src,'definitions');
+        common.clean(src,'responses');
 
 		return src;
 	}
