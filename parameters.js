@@ -4,8 +4,8 @@
 
 const util = require('util');
 
-var common = require('./common.js');
-var _ = require('lodash');
+const common = require('./common.js');
+const _ = require('lodash');
 
 var state = {};
 var logger;
@@ -211,18 +211,19 @@ module.exports = {
 			var entry = state.cache[e];
 			if (entry.locations.length>1) {
 				var newName = entry.name;
-				if (entry.locations[0].level==2) {
+				if (entry.locations[0].level>=1) { // was == 2
 					newName = uniq(src.parameters,entry.definition.name);
 				}
 				if (!src.parameters) {
 					src.parameters = {};
 				}
 				src.parameters[newName] = entry.definition; // will apply transforms
-				logger.log('The following parameters can be merged into #/parameters/'+newName);
+                logger.log('The following parameters can be merged into #/parameters/'+newName);
+
 				for (var l in entry.locations) {
 					var location = entry.locations[l];
-					logger.log('  '+entry.definition.name+':'+entry.definition.in+' @ '+location.action+' '+location.path);
-					if ((location.action != 'all') && (entry.in === entry.locations[0].in)) {
+                    logger.log('  '+entry.definition.name+':'+entry.definition.in+' @ '+location.action+' '+location.path);
+					if ((location.action != 'all') && (entry.locations[0].in === location.in) && (location.in === entry.in)) {
 						if ((entry.locations[0].level == 1) && (entry.locations[0].path == location.path)) {
 							// redundant duplication (override with no differences) of path-level parameter
 							src.paths[location.path][location.action].parameters.splice(location.index,1);
@@ -248,7 +249,6 @@ module.exports = {
 					for (var l in entry.locations) {
 						var locn = entry.locations[l];
 						if ((locn.level == 3) && (entry.definition.required) && (locn.operations >= spath.operations)) {
-						    console.log('  ',entry.name,entry.in);
                             src.paths[path].parameters.push(entry.definition);
 							src.paths[p][locn.action].parameters.splice(locn.index,1);
 						}
