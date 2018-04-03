@@ -109,22 +109,22 @@ function check(file) {
 	var components = file.split(path.sep);
 
 	if ((components[components.length-1].endsWith('.yaml')) || (components[components.length-1].endsWith('.json'))) {
-		console.log(file);
 
 		var srcStr = fs.readFileSync(path.resolve(file),'utf8');
 		var src;
 		try {
 			src = yaml.safeLoad(srcStr,{json:true});
+			console.log(file);
 		}
 		catch (ex) {
-			console.log(red+ex.message);
+			console.log(red+file);
+			console.log(ex.message);
 			return true;
 		}
 		if (!src.swagger && !src.openapi) {
 			return true;
 		}
-		console.log('  %s %s',src.info.title,src.info.version);
-		console.log('  %s',src.host);
+		console.log('  %s %s (%s)',src.info.title,src.info.version,src.host);
 
 		if (!argv.noBlacklist) {
 			for (var b in blacklist) {
