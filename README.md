@@ -55,7 +55,7 @@ var dest = opt.defaultOptimisations(swagger,options);
 * `openapi_optimise` applies all safe optimisations by default
 
 ```
-openapi_optimise {infile} [{outfile}]
+openapi_optimise [options] {infile} [{outfile}]
 
 Options:
   -h, --help           Show help                                       [boolean]
