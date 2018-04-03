@@ -79,7 +79,7 @@ module.exports = {
 							changes++;
 						}
 						else {
-							console.log('Reference not found:  %s',reference);
+							console.log('Reference not found: %s',reference);
 						}
 					}
 				}

@@ -297,6 +297,21 @@ module.exports = {
 			}
 		}
 
+        // handle azure $refs from within x- extensions
+        common.recurse(src,{},function(obj,key,rstate){
+            if ((key == '$ref') && (typeof obj[key] === 'string')) {
+                if (obj[key].indexOf('/parameters/')>=0) {
+                    let p = obj[key].split('/').pop();
+                    for (var e in state.cache) {
+                        let entry = state.cache[e];
+                        if ((entry.initial === 0) && (entry.name === p)) {
+                            entry.seen++;
+                        }
+                    }
+                }
+            }
+        });
+
 		logger.log('Checking common parameters are used');
 		for (var p in state.cache) {
 			var entry = state.cache[p];
