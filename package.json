@@ -27,7 +27,7 @@
   "dependencies": {
     "js-yaml": "^3.6.1",
     "lodash": "^4.17.10",
-    "reftools": "^0.0.20",
+    "reftools": "^1.0.0",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
