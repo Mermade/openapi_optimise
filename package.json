@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "openapi_optimise": "./openapi_optimise.js"
+  },
   "keywords": [
     "openapi",
     "swagger",
